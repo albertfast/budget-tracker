@@ -117,7 +117,7 @@ export default function TransactionsScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Description Chill</Text>
+          <Text style={styles.label}>Description</Text>
           <TextInput
             value={desc}
             onChangeText={setDesc}
