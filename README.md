@@ -42,7 +42,7 @@ smartbudget/
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/<your-username>/smartbudget.git
+   git clone https://github.com/albertfast/budget-tracker.git
    cd smartbudget
    ```
 
@@ -65,6 +65,7 @@ smartbudget/
 ---
 
 ## 👥 Team & Collaboration
+@albertfast
 
 - Work tracked on GitHub Projects (Kanban board).
 - Branch naming: `feature/<name>` or `fix/<name>`.
