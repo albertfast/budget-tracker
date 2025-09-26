@@ -1,6 +1,6 @@
 # budget-tracker
 # SmartBudget
-
+# This project for City College of San Francisco - CS 177-Software Engineering 
 SmartBudget is a simple personal finance tracker built with **Expo (React Native)** for mobile and **FastAPI (Python)** for the backend.  
 It helps users connect their bank, fetch transactions, categorize spending, add manual expenses, and receive alerts when budgets or limits are exceeded.
 
@@ -42,15 +42,15 @@ smartbudget/
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/<your-username>/smartbudget.git
+   git clone https://github.com/albertfast/budget-tracker.git
    cd smartbudget
    ```
 
 2. **Setup mobile app**
    ```bash
    cd mobile
-   npm install
-   npm start   # or expo start
+   npm install expo
+   npx expo start
    ```
 
 3. **Setup backend**
@@ -64,10 +64,17 @@ smartbudget/
 
 ---
 
+## 👤 Maintainers
+
+- [albertfast](https://github.com/albertfast)
+- [vs-turner](https://github.com/vs-turner)
+- [head2mytoes](https://github.com/head2mytoes)
+- [npad10](https://github.com/npad10)
+
 ## 👥 Team & Collaboration
 
 - Work tracked on GitHub Projects (Kanban board).
-- Branch naming: `feature/<name>` or `fix/<name>`.
+- Branch naming: budget_tracker_start.
 - Pull requests reviewed by at least one teammate.
 - Issues used for tasks and backlog items.
 
