@@ -44,3 +44,6 @@ build/
 .eggs/
 *.pid
 docker-compose.override.yml
+
+# Project specific
+backend/cookies.txt
