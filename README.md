@@ -6,6 +6,18 @@ It helps users connect their bank, fetch transactions, categorize spending, add 
 
 ---
 
+## 🍴 Fork This Repository
+
+**Want to contribute?** Click the button below to fork this repository to your own GitHub account:
+
+[![Fork budget-tracker](https://img.shields.io/badge/Fork-this%20repo-blue?style=for-the-badge&logo=github)](https://github.com/albertfast/budget-tracker/fork)
+
+Or visit: **[https://github.com/albertfast/budget-tracker/fork](https://github.com/albertfast/budget-tracker/fork)**
+
+📚 For detailed fork and contribution workflow, see [team_pr_guide.md](team_pr_guide.md)
+
+---
+
 ## 🚀 Features (Planned)
 
 - **Secure bank connection** (via third-party provider or CSV upload)
@@ -40,10 +52,25 @@ smartbudget/
 
 ## 💻 Getting Started
 
+### For Contributors (Recommended)
+
+1. **Fork this repository** (click the Fork button above or visit [/fork](https://github.com/albertfast/budget-tracker/fork))
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/budget-tracker.git
+   cd budget-tracker
+   ```
+3. **Set up remotes** (see [team_pr_guide.md](team_pr_guide.md) for details)
+   ```bash
+   git remote add upstream https://github.com/albertfast/budget-tracker.git
+   ```
+
+### For Quick Testing Only
+
 1. **Clone the repo**
    ```bash
    git clone https://github.com/albertfast/budget-tracker.git
-   cd smartbudget
+   cd budget-tracker
    ```
 
 2. **Setup mobile app**
