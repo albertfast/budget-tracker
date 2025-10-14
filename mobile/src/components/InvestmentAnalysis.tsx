@@ -136,6 +136,54 @@ export default function InvestmentAnalysis() {
             </View>
           </View>
 
+          {/* ROI Time Estimates */}
+          {rec.expected_return && rec.expected_return > 0 && rec.recommended_allocation && (
+            <View style={styles.roiEstimatesContainer}>
+              <Text style={styles.roiTitle}>⏱️ ROI Time Estimates</Text>
+              <View style={styles.roiGrid}>
+                <View style={styles.roiItem}>
+                  <Text style={styles.roiPeriod}>1 Year</Text>
+                  <Text style={styles.roiPercent}>
+                    {(rec.expected_return * 100).toFixed(1)}%
+                  </Text>
+                  <Text style={styles.roiAmount}>
+                    ${(rec.recommended_allocation * 12 * rec.expected_return).toFixed(0)}
+                  </Text>
+                </View>
+                <View style={styles.roiItem}>
+                  <Text style={styles.roiPeriod}>3 Years</Text>
+                  <Text style={styles.roiPercent}>
+                    {((Math.pow(1 + rec.expected_return, 3) - 1) * 100).toFixed(1)}%
+                  </Text>
+                  <Text style={styles.roiAmount}>
+                    ${(rec.recommended_allocation * 12 * 3 * (Math.pow(1 + rec.expected_return, 3) - 1)).toFixed(0)}
+                  </Text>
+                </View>
+                <View style={styles.roiItem}>
+                  <Text style={styles.roiPeriod}>5 Years</Text>
+                  <Text style={styles.roiPercent}>
+                    {((Math.pow(1 + rec.expected_return, 5) - 1) * 100).toFixed(1)}%
+                  </Text>
+                  <Text style={styles.roiAmount}>
+                    ${(rec.recommended_allocation * 12 * 5 * (Math.pow(1 + rec.expected_return, 5) - 1)).toFixed(0)}
+                  </Text>
+                </View>
+                <View style={styles.roiItem}>
+                  <Text style={styles.roiPeriod}>10 Years</Text>
+                  <Text style={styles.roiPercent}>
+                    {((Math.pow(1 + rec.expected_return, 10) - 1) * 100).toFixed(1)}%
+                  </Text>
+                  <Text style={styles.roiAmount}>
+                    ${(rec.recommended_allocation * 12 * 10 * (Math.pow(1 + rec.expected_return, 10) - 1)).toFixed(0)}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.roiDisclaimer}>
+                * Estimates based on {(rec.expected_return * 100).toFixed(1)}% annual return with monthly contributions of ${rec.recommended_allocation}
+              </Text>
+            </View>
+          )}
+
           {rec.action_items && (
             <View style={styles.actionItemsContainer}>
               <Text style={styles.actionItemsTitle}>Action Items:</Text>
@@ -504,5 +552,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     color: '#22c55e',
+  },
+  roiEstimatesContainer: {
+    backgroundColor: '#0a1425',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#1e40af',
+  },
+  roiTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#3b82f6',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  roiGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  roiItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  roiPeriod: {
+    fontSize: 11,
+    color: '#7a8fa5',
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  roiPercent: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#22c55e',
+    marginBottom: 4,
+  },
+  roiAmount: {
+    fontSize: 12,
+    color: '#9fb3c8',
+    fontWeight: '600',
+  },
+  roiDisclaimer: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 14,
   },
 });
