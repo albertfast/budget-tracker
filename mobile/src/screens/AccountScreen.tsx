@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 
 export default function AccountScreen() {
   const [email, setEmail] = React.useState('');
@@ -27,8 +28,11 @@ export default function AccountScreen() {
   const onGoogle = () => Alert.alert('Google Sign-In', 'Google auth flow TBD');
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Account</Text>
+    <SwipeNavigationWrapper currentTab="Account">
+      <View style={styles.screen}>
+        <Text style={styles.sectionHeader}>Account Settings</Text>
+        <Text style={styles.sectionDescription}>Manage your profile and application preferences</Text>
+      
       <View style={styles.card}>
         <View style={styles.avatarRow}>
           <Image
@@ -83,36 +87,54 @@ export default function AccountScreen() {
         </View>
       </View>
     </View>
+    </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, backgroundColor: '#0b1220' },
-  title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 12 },
-  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 16, gap: 14 },
-  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#0f1930' },
-  cardTitle: { color: 'white', fontWeight: '700', fontSize: 16 },
-  cardSubtitle: { color: '#9bb4da', fontSize: 12 },
-  label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600' },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
+  title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
+  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
+  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 8, paddingVertical: 8 },
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#0f1930' },
+  cardTitle: { color: 'white', fontWeight: '700', fontSize: 18 },
+  cardSubtitle: { color: '#9bb4da', fontSize: 14, marginTop: 2 },
+  label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600', marginTop: 4, marginBottom: 6 },
   input: {
-    height: 44,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#223459',
     color: 'white',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     backgroundColor: '#0f1930',
+    marginBottom: 4,
   },
   button: {
     backgroundColor: '#3b82f6',
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
+    marginVertical: 4,
+    minHeight: 44,
   },
   googleBtn: { backgroundColor: '#ea4335' },
   buttonText: { color: 'white', fontWeight: '700' },
-  linkBtn: { alignSelf: 'flex-end' },
+  linkBtn: { alignSelf: 'flex-end', paddingVertical: 8, paddingHorizontal: 4 },
   linkText: { color: '#7da0d6', fontWeight: '600' },
   hr: { height: 1, backgroundColor: '#223459', marginVertical: 10, opacity: 0.6 },
+  sectionHeader: {
+    color: '#9fb3c8',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  sectionDescription: {
+    color: '#7a8fa5',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

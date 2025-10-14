@@ -19,6 +19,7 @@ export default function BottomTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarStyle: { display: 'none' }, // Hide bottom tabs
         tabBarActiveTintColor: '#0b1220',
         tabBarInactiveTintColor: '#666'
       }}
