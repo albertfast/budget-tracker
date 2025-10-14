@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { AndroidNativeProps, DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Svg, { Rect } from 'react-native-svg';
+import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 
 const CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Fun', 'Other'];
 const STORAGE_KEY = 'smartbudget:transactions:v1';
@@ -103,8 +104,11 @@ export default function TransactionsScreen() {
   const maxVal = Math.max(1, ...Object.values(totals));
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Transactions</Text>
+    <SwipeNavigationWrapper currentTab="Transactions">
+      <View style={styles.screen}>
+        <Text style={styles.sectionHeader}>Transaction Management</Text>
+        <Text style={styles.sectionDescription}>Add, edit, and track your financial transactions</Text>
+      
       <View style={styles.card}>
         <View style={{ gap: 10 }}>
           <Text style={styles.label}>Amount</Text>
@@ -182,8 +186,9 @@ export default function TransactionsScreen() {
         <FlatList
           data={[...items].reverse()}
           keyExtractor={(it) => it.id}
-          style={{ maxHeight: 220 }}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          style={{ maxHeight: 240 }}
+          contentContainerStyle={{ paddingVertical: 8 }}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           renderItem={({ item }) => (
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
@@ -211,7 +216,7 @@ export default function TransactionsScreen() {
         <Text style={styles.subTitle}>Spend by category</Text>
         <View style={{ gap: 10 }}>
           {/* SVG chart */}
-          <View style={{ backgroundColor: '#0f1930', borderRadius: 10, padding: 10 }}>
+          <View style={{ backgroundColor: '#0f1930', borderRadius: 10, padding: 20 }}>
             <Svg viewBox="0 0 100 70" width="100%" height={140}>
               {CATEGORIES.map((c, idx) => {
                 const val = totals[c] || 0;
@@ -234,37 +239,41 @@ export default function TransactionsScreen() {
         </View>
       </View>
     </View>
+    </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, backgroundColor: '#0b1220' },
-  title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 12 },
-  subTitle: { color: 'white', fontSize: 16, fontWeight: '700', marginBottom: 8 },
-  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 16, gap: 12 },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
+  title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
+  subTitle: { color: 'white', fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
+  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
   label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600' },
   input: {
-    height: 44,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#223459',
     color: 'white',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     backgroundColor: '#0f1930',
+    marginBottom: 4,
   },
   dateButton: { justifyContent: 'center' },
-  pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginVertical: 8 },
   pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#223459',
     backgroundColor: '#0f1930',
+    minWidth: 48,
+    alignItems: 'center',
   },
   pillActive: { backgroundColor: '#1e40af', borderColor: '#1e40af' },
   pillText: { color: 'white', fontWeight: '600' },
-  button: { backgroundColor: '#3b82f6', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  button: { backgroundColor: '#3b82f6', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginVertical: 8 },
   buttonText: { color: 'white', fontWeight: '700' },
   hr: { height: 1, backgroundColor: '#223459', marginVertical: 10, opacity: 0.6 },
   catName: { color: '#cfe1ff' },
@@ -273,13 +282,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#0f1930',
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 12,
+    padding: 14,
+    marginHorizontal: 4,
+    marginVertical: 2,
   },
   smallBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    minWidth: 48,
+    alignItems: 'center',
   },
   smallBtnText: { color: 'white', fontWeight: '700' },
+  sectionHeader: {
+    color: '#9fb3c8',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  sectionDescription: {
+    color: '#7a8fa5',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });
