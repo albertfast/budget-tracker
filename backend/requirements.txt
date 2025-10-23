@@ -6,7 +6,6 @@ pydantic-settings==2.0.3
 
 # Database
 sqlalchemy==2.0.23
-sqlite3
 
 # Authentication & Security
 python-jose[cryptography]==3.3.0

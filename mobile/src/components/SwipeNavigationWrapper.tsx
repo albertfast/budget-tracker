@@ -20,7 +20,7 @@ export default function SwipeNavigationWrapper({
   const navigation = useNavigation();
 
   // Tab order for swipe navigation
-  const tabs = ['Home', 'Transactions', 'Add', 'Connect Account', 'Account'];
+  const tabs = ['Home', 'Add', 'Connect Account', 'Account'];
   const currentTabIndex = tabs.indexOf(currentTab);
   
   // State for advanced gesture tracking
@@ -111,12 +111,9 @@ export default function SwipeNavigationWrapper({
     tapTimeoutRef.current = setTimeout(() => {
       if (tapCount === 1) {
         // Single tap - do nothing special
-      } else if (tapCount === 2) {
-        // Double tap - navigate to second tab (Transactions)
-        navigateToTab('Transactions');
-      } else if (tapCount >= 3) {
-        // Triple tap - navigate three tabs over or to highest cardinality tab (Account)
-        const targetIndex = Math.min(currentTabIndex + 3, tabs.length - 1);
+      } else if (tapCount >= 2) {
+        // Double/Triple tap - navigate multiple tabs over or to highest cardinality tab (Account)
+        const targetIndex = Math.min(currentTabIndex + 2, tabs.length - 1);
         navigateToTab(tabs[targetIndex]);
       }
       setTapCount(0);

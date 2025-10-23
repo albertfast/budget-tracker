@@ -20,7 +20,7 @@ export default function FinancialSummary() {
   const maxAmount = Math.max(monthlyIncome, ...expenseCategories.map(cat => cat.amount));
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Financial Summary</Text>
       
       {/* Financial Summary Table */}
@@ -159,6 +159,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 20,
   },
   title: {
     fontSize: 18,

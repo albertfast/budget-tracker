@@ -185,7 +185,7 @@ export default function ConnectAccountScreen() {
 
   if (connectionStatus === 'connected') {
     return (
-      <ScrollView style={styles.screen}>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Connect Account</Text>
         
         <View style={styles.successCard}>
@@ -225,7 +225,7 @@ export default function ConnectAccountScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Connect Account">
-      <ScrollView style={styles.screen}>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.sectionHeader}>Bank Integration</Text>
         <Text style={styles.sectionDescription}>Connect your bank accounts for automatic transaction sync</Text>
       
@@ -347,6 +347,7 @@ export default function ConnectAccountScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b1220', paddingHorizontal: 20, paddingVertical: 20 },
+  scrollContent: { paddingTop: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center', marginTop: 8 },
   card: { backgroundColor: '#111a30', borderRadius: 12, marginVertical: 16, padding: 20, marginHorizontal: 8 },
   subtitle: { color: 'white', fontSize: 18, fontWeight: '600', marginBottom: 8 },
