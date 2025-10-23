@@ -16,6 +16,7 @@ class AdvancedInvestmentRecommendationEngine:
     """Enhanced investment recommendation engine with technical and fundamental analysis"""
     
     def __init__(self):
+        # Load configuration and defaults used across methods
         self.investment_products = self._load_investment_products()
         self.savings_thresholds = self._load_savings_thresholds()
         self.analysis_weights = self._load_analysis_weights()
@@ -444,6 +445,191 @@ class AdvancedInvestmentRecommendationEngine:
             "debt_analysis": 0.25,             # Financial stability
             "profitability": 0.15              # Current performance
         }
+
+    # Restored helper methods (minimal yet functional implementations)
+    def _load_investment_products(self) -> Dict[str, Any]:
+        """Define a small catalog of investment products with basic metadata."""
+        return {
+            "high_yield_savings": {
+                "type": "cash",
+                "risk": "low",
+                "expected_return": 0.03,
+                "liquidity": "high",
+            },
+            "bond_fund": {
+                "type": "fixed_income",
+                "risk": "low",
+                "expected_return": 0.04,
+                "liquidity": "medium",
+            },
+            "index_fund": {
+                "type": "equity",
+                "risk": "moderate",
+                "expected_return": 0.07,
+                "liquidity": "high",
+            },
+            "growth_etf": {
+                "type": "equity",
+                "risk": "high",
+                "expected_return": 0.10,
+                "liquidity": "high",
+            },
+        }
+
+    def _load_savings_thresholds(self) -> Dict[str, Any]:
+        """Basic savings and risk thresholds used in recommendations."""
+        return {
+            "emergency_fund_months_min": 3,
+            "emergency_fund_months_target": 6,
+            "min_investment_amount": 50.0,
+            "max_position_size_pct": 20.0,
+        }
+
+    def _map_recommendation_to_direction(self, rec: str) -> str:
+        rec_norm = (rec or "").lower()
+        if rec_norm in ("strong_buy", "buy"):  # bullish
+            return "bullish"
+        if rec_norm in ("strong_sell", "sell"):  # bearish
+            return "bearish"
+        return "neutral"
+
+    def _identify_key_combined_factors(
+        self,
+        technical_analysis: Dict[str, Any],
+        fundamental_analysis: Dict[str, Any],
+        weights: Dict[str, float],
+    ) -> List[str]:
+        """Summarize a few key factors from both analyses for explainability."""
+        factors: List[str] = []
+        # Technical drivers
+        ma = technical_analysis.get("moving_average_analysis", {})
+        if ma.get("golden_cross"):
+            factors.append("50/200 MA golden cross")
+        if ma.get("death_cross"):
+            factors.append("50/200 MA death cross")
+        fib = technical_analysis.get("fibonacci_analysis", {}).get("golden_ratio_analysis", {})
+        if fib.get("strength", 0) > 60:
+            factors.append("Strong golden ratio confluence")
+        # Fundamental drivers
+        health = fundamental_analysis.get("company_health", {})
+        score = health.get("overall_score")
+        if isinstance(score, (int, float)):
+            if score >= 80:
+                factors.append("Excellent fundamentals")
+            elif score <= 40:
+                factors.append("Weak fundamentals")
+        growth = fundamental_analysis.get("growth_assessment", {})
+        if growth.get("growth_score", 0) > 70:
+            factors.append("Strong growth potential")
+        # Weight emphasis
+        if weights.get("fundamental", 0) > weights.get("technical", 0):
+            factors.append("Fundamentals weighted more due to horizon/risk")
+        else:
+            factors.append("Technical momentum weighted more due to volatility")
+        return factors[:6]
+
+    def _calculate_optimal_position_size(
+        self,
+        recommendation: str,
+        confidence: int,
+        user_profile: Dict[str, Any],
+        fundamental_analysis: Dict[str, Any],
+    ) -> float:
+        """Very simple position sizing rule-of-thumb in percent of portfolio."""
+        base = 5.0  # baseline per position
+        risk_level = user_profile.get("risk_profile", {}).get("risk_level", "moderate")
+        if recommendation in ("strong_buy", "strong_sell"):
+            base += 3.0
+        elif recommendation in ("buy", "sell"):
+            base += 1.5
+        # Confidence scaling
+        base *= (0.5 + (confidence / 200.0))  # 0.5x to ~1.0x
+        # Risk tolerance
+        if risk_level == "low":
+            base *= 0.7
+        elif risk_level == "high":
+            base *= 1.3
+        return float(min(base, self.savings_thresholds.get("max_position_size_pct", 20.0)))
+
+    def _generate_investment_thesis(
+        self,
+        symbol: str,
+        technical_analysis: Dict[str, Any],
+        fundamental_analysis: Dict[str, Any],
+        combined_analysis: Dict[str, Any],
+    ) -> str:
+        direction = combined_analysis.get("combined_direction", "neutral")
+        score = combined_analysis.get("combined_score", 50)
+        sector = fundamental_analysis.get("company_health", {}).get("sector", "")
+        return (
+            f"{symbol} shows {direction} conditions (score {int(score)}). "
+            f"Technical signals and fundamental health suggest a risk-adjusted opportunity"
+            + (f" within the {sector} sector." if sector else ".")
+        )
+
+    def _identify_investment_catalysts(
+        self,
+        technical_analysis: Dict[str, Any],
+        fundamental_analysis: Dict[str, Any],
+    ) -> List[str]:
+        catalysts: List[str] = []
+        # Earnings or revenue growth
+        growth = fundamental_analysis.get("growth_assessment", {})
+        if growth.get("revenue_growth_trend") == "improving":
+            catalysts.append("Improving revenue growth")
+        # Technical breakouts
+        sr = technical_analysis.get("support_resistance", {})
+        if sr.get("recent_breakout", False):
+            catalysts.append("Recent resistance breakout")
+        if not catalysts:
+            catalysts.append("Favorable risk/reward setup")
+        return catalysts
+
+    def _identify_investment_risks(
+        self,
+        technical_analysis: Dict[str, Any],
+        fundamental_analysis: Dict[str, Any],
+        user_profile: Dict[str, Any],
+    ) -> List[str]:
+        risks: List[str] = []
+        debt = fundamental_analysis.get("debt_analysis", {})
+        if debt.get("debt_to_equity", 0) > 1.0:
+            risks.append("Elevated leverage (D/E > 1)")
+        trend = technical_analysis.get("trend_analysis", {})
+        if trend.get("primary_trend") == "downtrend":
+            risks.append("Prevailing downtrend")
+        if not risks:
+            risks.append("General market volatility")
+        return risks
+
+    def _define_monitoring_levels(
+        self,
+        technical_analysis: Dict[str, Any],
+        price_targets: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        sr = technical_analysis.get("support_resistance", {})
+        supports = sr.get("support_levels", [])
+        resistances = sr.get("resistance_levels", [])
+        return {
+            "watch_support": supports[:2],
+            "watch_resistance": resistances[:2],
+            "re_evaluate_below": price_targets.get("stop_loss"),
+            "re_evaluate_above": price_targets.get("primary_target"),
+        }
+
+    def _define_exit_strategy(
+        self,
+        recommendation: str,
+        price_targets: Dict[str, Any],
+        time_horizon: Dict[str, Any],
+        user_profile: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        return {
+            "take_profit": price_targets.get("primary_target"),
+            "stop_loss": price_targets.get("stop_loss"),
+            "review_in": time_horizon,
+            "notes": "Tighten stop on strong moves; scale out near resistance.",
+        }
     
     # Keep existing methods from original investment_engine.py
     def analyze_financial_profile(
@@ -486,470 +672,115 @@ class AdvancedInvestmentRecommendationEngine:
             "generated_at": datetime.utcnow()
         }
     
-    # Additional helper methods would be implemented here...
-    # (Include all other methods from the original investment_engine.py)
-
-# Initialize enhanced investment recommendation engine
-investment_engine = AdvancedInvestmentRecommendationEngine()
-    """Engine for analyzing spending and providing investment recommendations"""
-    
-    def __init__(self):
-        self.investment_products = self._load_investment_products()
-        self.savings_thresholds = self._load_savings_thresholds()
-    
-    def analyze_financial_profile(
-        self, 
-        db: Session, 
-        user_id: str, 
-        analysis_days: int = 90
-    ) -> Dict[str, Any]:
-        """Analyze user's financial profile for investment recommendations"""
-        
-        # Get comprehensive spending analysis
-        spending_analysis = transaction_processor.get_spending_analysis(
-            db, user_id, analysis_days
-        )
-        
-        # Get recurring transactions (subscriptions, etc.)
-        recurring_analysis = transaction_processor.detect_recurring_transactions(
-            db, user_id, analysis_days
-        )
-        
-        # Calculate income vs expenses
-        income_expense_analysis = self._analyze_income_expenses(db, user_id, analysis_days)
-        
-        # Assess savings potential
-        savings_potential = self._calculate_savings_potential(
-            spending_analysis, recurring_analysis, income_expense_analysis
-        )
-        
-        # Generate risk profile
-        risk_profile = self._assess_risk_profile(spending_analysis, income_expense_analysis)
-        
-        return {
-            "user_id": user_id,
-            "analysis_period_days": analysis_days,
-            "spending_analysis": spending_analysis,
-            "recurring_transactions": recurring_analysis,
-            "income_expense_analysis": income_expense_analysis,
-            "savings_potential": savings_potential,
-            "risk_profile": risk_profile,
-            "generated_at": datetime.utcnow()
-        }
-    
-    def generate_investment_recommendations(
-        self, 
-        financial_profile: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Generate personalized investment recommendations"""
-        
-        savings_potential = financial_profile["savings_potential"]
-        risk_profile = financial_profile["risk_profile"]
-        spending_analysis = financial_profile["spending_analysis"]
-        
-        recommendations = []
-        
-        # Emergency fund recommendation
-        emergency_fund_rec = self._recommend_emergency_fund(savings_potential, spending_analysis)
-        if emergency_fund_rec:
-            recommendations.append(emergency_fund_rec)
-        
-        # Investment recommendations based on savings capacity
-        if savings_potential["monthly_savings_potential"] > 100:
-            
-            # Low-risk investments for conservative users
-            if risk_profile["risk_level"] in ["low", "moderate"]:
-                recommendations.extend(self._get_conservative_investments(savings_potential))
-            
-            # Growth investments for moderate to high risk users
-            if risk_profile["risk_level"] in ["moderate", "high"]:
-                recommendations.extend(self._get_growth_investments(savings_potential))
-            
-            # Retirement planning
-            retirement_rec = self._recommend_retirement_planning(savings_potential, risk_profile)
-            if retirement_rec:
-                recommendations.append(retirement_rec)
-        
-        # Debt optimization recommendations
-        debt_recommendations = self._analyze_debt_optimization(financial_profile)
-        recommendations.extend(debt_recommendations)
-        
-        # Spending optimization recommendations
-        spending_recs = self._recommend_spending_optimizations(financial_profile)
-        recommendations.extend(spending_recs)
-        
-        return {
-            "recommendations": recommendations,
-            "summary": self._generate_recommendation_summary(recommendations),
-            "priority_actions": self._prioritize_recommendations(recommendations)
-        }
-    
-    def _analyze_income_expenses(
-        self, 
-        db: Session, 
-        user_id: str, 
-        days: int
-    ) -> Dict[str, Any]:
-        """Analyze income vs expenses pattern"""
-        
+    # Additional helper methods (restored minimal implementations)
+    def _analyze_income_expenses(self, db: Session, user_id: str, days: int) -> Dict[str, Any]:
+        """Compute simple income vs expenses over window and normalize monthly."""
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
-        
-        # Get all transactions
-        transactions = db.query(Transaction).join(BankAccount).filter(
+        txs: List[Transaction] = db.query(Transaction).join(BankAccount).filter(
             BankAccount.user_id == user_id,
-            Transaction.date >= start_date
+            Transaction.date >= start_date,
+            Transaction.date <= end_date,
         ).all()
-        
-        total_income = 0
-        total_expenses = 0
-        income_transactions = []
-        expense_transactions = []
-        
-        for tx in transactions:
-            if tx.amount > 0:  # Income
-                total_income += tx.amount
-                income_transactions.append(tx)
-            else:  # Expense
-                total_expenses += abs(tx.amount)
-                expense_transactions.append(tx)
-        
-        # Calculate monthly averages
-        months = days / 30.0
-        monthly_income = total_income / months if months > 0 else 0
-        monthly_expenses = total_expenses / months if months > 0 else 0
-        
+        income = sum(tx.amount for tx in txs if tx.amount > 0)
+        expenses = sum(-tx.amount for tx in txs if tx.amount < 0)
+        scale = 30.0 / max(1, days)
+        monthly_income = income * scale
+        monthly_expenses = expenses * scale
         return {
-            "total_income": total_income,
-            "total_expenses": total_expenses,
+            "period_days": days,
+            "total_income": income,
+            "total_expenses": expenses,
             "monthly_income": monthly_income,
             "monthly_expenses": monthly_expenses,
             "net_monthly": monthly_income - monthly_expenses,
-            "expense_ratio": (monthly_expenses / monthly_income) if monthly_income > 0 else 0,
-            "income_sources": self._analyze_income_sources(income_transactions),
-            "expense_categories": self._analyze_expense_categories(expense_transactions)
-        }
-    
-    def _calculate_savings_potential(
-        self, 
-        spending_analysis: Dict[str, Any], 
-        recurring_analysis: List[Dict[str, Any]],
-        income_expense_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Calculate potential savings from various optimizations"""
-        
-        # Base savings from positive cash flow
-        base_monthly_savings = max(0, income_expense_analysis["net_monthly"])
-        
-        # Potential savings from subscription optimization
-        subscription_savings = self._calculate_subscription_savings(recurring_analysis)
-        
-        # Potential savings from spending category optimization
-        category_savings = self._calculate_category_savings(spending_analysis)
-        
-        # Total potential savings
-        total_potential = base_monthly_savings + subscription_savings + category_savings
-        
-        return {
-            "current_monthly_savings": base_monthly_savings,
-            "subscription_optimization_savings": subscription_savings,
-            "category_optimization_savings": category_savings,
-            "total_monthly_potential": total_potential,
-            "annual_potential": total_potential * 12,
-            "savings_rate": (base_monthly_savings / income_expense_analysis["monthly_income"]) 
-                          if income_expense_analysis["monthly_income"] > 0 else 0
-        }
-    
-    def _assess_risk_profile(
-        self, 
-        spending_analysis: Dict[str, Any], 
-        income_expense_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Assess user's risk profile based on financial behavior"""
-        
-        # Factors that indicate risk tolerance
-        expense_ratio = income_expense_analysis["expense_ratio"]
-        spending_volatility = self._calculate_spending_volatility(spending_analysis)
-        emergency_fund_capacity = income_expense_analysis["net_monthly"] * 6  # 6 months expenses
-        
-        # Risk scoring
-        risk_score = 0
-        
-        # Lower expense ratio indicates higher risk capacity
-        if expense_ratio < 0.5:
-            risk_score += 3
-        elif expense_ratio < 0.7:
-            risk_score += 2
-        elif expense_ratio < 0.9:
-            risk_score += 1
-        
-        # Lower spending volatility indicates stability
-        if spending_volatility < 0.2:
-            risk_score += 2
-        elif spending_volatility < 0.4:
-            risk_score += 1
-        
-        # Determine risk level
-        if risk_score >= 4:
-            risk_level = "high"
-        elif risk_score >= 2:
-            risk_level = "moderate"
-        else:
-            risk_level = "low"
-        
-        return {
-            "risk_level": risk_level,
-            "risk_score": risk_score,
-            "expense_ratio": expense_ratio,
-            "spending_volatility": spending_volatility,
-            "recommended_emergency_fund": emergency_fund_capacity
-        }
-    
-    def _recommend_emergency_fund(
-        self, 
-        savings_potential: Dict[str, Any], 
-        spending_analysis: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
-        """Recommend emergency fund based on spending patterns"""
-        
-        monthly_expenses = spending_analysis["total_spent"] / (spending_analysis["period_days"] / 30)
-        recommended_emergency_fund = monthly_expenses * 6  # 6 months of expenses
-        
-        if savings_potential["current_monthly_savings"] > 0:
-            months_to_build = recommended_emergency_fund / savings_potential["current_monthly_savings"]
-            
-            return {
-                "type": "emergency_fund",
-                "priority": "high",
-                "title": "Build Emergency Fund",
-                "description": f"Build a ${recommended_emergency_fund:.0f} emergency fund (6 months of expenses)",
-                "recommended_amount": recommended_emergency_fund,
-                "monthly_contribution": min(
-                    savings_potential["current_monthly_savings"] * 0.5, 
-                    recommended_emergency_fund / 12
-                ),
-                "time_to_goal": f"{months_to_build:.1f} months",
-                "investment_type": "high_yield_savings",
-                "expected_return": 0.04  # 4% APY for high-yield savings
-            }
-        
-        return None
-    
-    def _get_conservative_investments(
-        self, 
-        savings_potential: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Get conservative investment recommendations"""
-        
-        monthly_capacity = savings_potential["total_monthly_potential"]
-        recommendations = []
-        
-        if monthly_capacity >= 50:
-            # High-yield savings account
-            recommendations.append({
-                "type": "high_yield_savings",
-                "priority": "high",
-                "title": "High-Yield Savings Account",
-                "description": "Earn higher interest on your savings with FDIC protection",
-                "recommended_allocation": min(monthly_capacity * 0.4, 500),
-                "expected_return": 0.04,
-                "risk_level": "very_low",
-                "liquidity": "high"
-            })
-        
-        if monthly_capacity >= 100:
-            # Conservative bond funds
-            recommendations.append({
-                "type": "bond_fund",
-                "priority": "medium",
-                "title": "Conservative Bond Index Fund",
-                "description": "Diversified bond portfolio for steady income",
-                "recommended_allocation": min(monthly_capacity * 0.3, 300),
-                "expected_return": 0.05,
-                "risk_level": "low",
-                "liquidity": "medium"
-            })
-        
-        return recommendations
-    
-    def _get_growth_investments(
-        self, 
-        savings_potential: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Get growth-oriented investment recommendations"""
-        
-        monthly_capacity = savings_potential["total_monthly_potential"]
-        recommendations = []
-        
-        if monthly_capacity >= 100:
-            # Stock market index funds
-            recommendations.append({
-                "type": "stock_index_fund",
-                "priority": "high",
-                "title": "Total Stock Market Index Fund",
-                "description": "Diversified exposure to the entire stock market",
-                "recommended_allocation": min(monthly_capacity * 0.6, 1000),
-                "expected_return": 0.10,
-                "risk_level": "medium",
-                "liquidity": "high"
-            })
-        
-        if monthly_capacity >= 200:
-            # International diversification
-            recommendations.append({
-                "type": "international_fund",
-                "priority": "medium",
-                "title": "International Stock Index Fund",
-                "description": "Diversify globally with international market exposure",
-                "recommended_allocation": min(monthly_capacity * 0.2, 400),
-                "expected_return": 0.08,
-                "risk_level": "medium",
-                "liquidity": "high"
-            })
-        
-        return recommendations
-    
-    def _recommend_spending_optimizations(
-        self, 
-        financial_profile: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Recommend spending optimizations to increase savings"""
-        
-        spending_analysis = financial_profile["spending_analysis"]
-        recurring_transactions = financial_profile["recurring_transactions"]
-        
-        recommendations = []
-        
-        # Subscription optimization
-        total_subscriptions = sum(
-            tx["total_spent"] for tx in recurring_transactions 
-            if "subscription" in tx["merchant"].lower() or "streaming" in tx["merchant"].lower()
-        )
-        
-        if total_subscriptions > 50:  # More than $50/month in subscriptions
-            recommendations.append({
-                "type": "subscription_optimization",
-                "priority": "medium",
-                "title": "Optimize Subscriptions",
-                "description": f"Review ${total_subscriptions:.0f}/month in subscriptions",
-                "potential_savings": total_subscriptions * 0.3,  # Assume 30% can be saved
-                "action_items": [
-                    "Cancel unused subscriptions",
-                    "Downgrade to cheaper plans",
-                    "Share family plans",
-                    "Use annual billing for discounts"
-                ]
-            })
-        
-        # High spending categories
-        top_categories = spending_analysis["top_categories"]
-        for category, amount in top_categories[:3]:
-            if amount > 500:  # High spending category
-                recommendations.append({
-                    "type": "category_optimization",
-                    "priority": "low",
-                    "title": f"Optimize {category} Spending",
-                    "description": f"High spending in {category}: ${amount:.0f}/month",
-                    "potential_savings": amount * 0.15,  # 15% reduction potential
-                    "suggestions": self._get_category_suggestions(category)
-                })
-        
-        return recommendations
-    
-    def _get_category_suggestions(self, category: str) -> List[str]:
-        """Get spending reduction suggestions for specific categories"""
-        suggestions = {
-            "Food and Drink": [
-                "Cook more meals at home",
-                "Use meal planning apps",
-                "Buy generic brands",
-                "Use grocery store loyalty programs"
-            ],
-            "Transportation": [
-                "Use public transportation",
-                "Carpool or rideshare",
-                "Combine errands into single trips",
-                "Consider gas rewards credit cards"
-            ],
-            "Entertainment": [
-                "Look for free local events",
-                "Use library resources",
-                "Share streaming subscriptions",
-                "Take advantage of happy hour pricing"
-            ],
-            "Shops": [
-                "Use cashback apps",
-                "Compare prices before buying",
-                "Wait for sales and clearances",
-                "Use coupon apps"
-            ]
-        }
-        
-        return suggestions.get(category, ["Review spending in this category"])
-    
-    def _prioritize_recommendations(
-        self, 
-        recommendations: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
-        """Prioritize recommendations by importance and impact"""
-        
-        priority_order = {"high": 3, "medium": 2, "low": 1}
-        
-        return sorted(
-            recommendations, 
-            key=lambda x: (
-                priority_order.get(x.get("priority", "low"), 1),
-                x.get("potential_savings", x.get("recommended_allocation", 0))
-            ),
-            reverse=True
-        )[:5]  # Top 5 recommendations
-    
-    def _calculate_spending_volatility(self, spending_analysis: Dict[str, Any]) -> float:
-        """Calculate spending volatility from daily spending data"""
-        daily_spending = spending_analysis.get("daily_spending", {})
-        
-        if len(daily_spending) < 7:
-            return 1.0  # High volatility if insufficient data
-        
-        amounts = list(daily_spending.values())
-        avg_spending = sum(amounts) / len(amounts)
-        
-        if avg_spending == 0:
-            return 0.0
-        
-        variance = sum((amount - avg_spending) ** 2 for amount in amounts) / len(amounts)
-        return (variance ** 0.5) / avg_spending  # Coefficient of variation
-    
-    def _load_investment_products(self) -> Dict[str, Any]:
-        """Load available investment products and their characteristics"""
-        return {
-            "high_yield_savings": {
-                "name": "High-Yield Savings Account",
-                "expected_return": 0.04,
-                "risk_level": "very_low",
-                "minimum_investment": 1
-            },
-            "bond_fund": {
-                "name": "Bond Index Fund",
-                "expected_return": 0.05,
-                "risk_level": "low",
-                "minimum_investment": 100
-            },
-            "stock_index_fund": {
-                "name": "Stock Index Fund",
-                "expected_return": 0.10,
-                "risk_level": "medium",
-                "minimum_investment": 100
-            }
-        }
-    
-    def _load_savings_thresholds(self) -> Dict[str, float]:
-        """Load savings thresholds for different recommendations"""
-        return {
-            "emergency_fund_months": 6,
-            "minimum_investment": 50,
-            "high_savings_threshold": 500
         }
 
+    def _calculate_savings_potential(
+        self,
+        spending_analysis: Dict[str, Any],
+        recurring_analysis: List[Dict[str, Any]],
+        income_expense: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Estimate potential savings from discretionary spend and subscriptions."""
+        # Heuristic: 10% of avg daily spend times 30 plus 30% of recurring subs
+        discretionary = (spending_analysis.get("avg_daily_spend", 0) * 30) * 0.10
+        recurring_total = sum(item.get("amount", 0) for item in recurring_analysis if item.get("frequency") == "monthly")
+        recurring_savings = recurring_total * 0.30
+        total = max(0.0, income_expense.get("net_monthly", 0)) * 0.20 + discretionary + recurring_savings
+        return {
+            "from_discretionary": discretionary,
+            "from_subscriptions": recurring_savings,
+            "income_based": max(0.0, income_expense.get("net_monthly", 0)) * 0.20,
+            "total_monthly_potential": total,
+        }
+
+    def _assess_risk_profile(
+        self,
+        spending_analysis: Dict[str, Any],
+        income_expense: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Basic risk profile based on savings capacity and spending stability."""
+        savings_capacity = income_expense.get("net_monthly", 0)
+        avg_tx = spending_analysis.get("avg_transaction_amount", 0)
+        if savings_capacity > 1000 and avg_tx < 100:
+            level = "high"
+        elif savings_capacity > 300:
+            level = "moderate"
+        else:
+            level = "low"
+        return {
+            "risk_level": level,
+            "notes": "Heuristic assessment based on cash flow and spending dispersion.",
+        }
+
+    def generate_investment_recommendations(self, financial_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Produce a simple, prioritized set of actions from the user's profile."""
+        recs: List[Dict[str, Any]] = []
+        monthly_net = financial_profile.get("income_expense_analysis", {}).get("net_monthly", 0)
+        savings_potential = financial_profile.get("savings_potential", {}).get("total_monthly_potential", 0)
+        risk_level = financial_profile.get("risk_profile", {}).get("risk_level", "moderate")
+
+        # 1) Emergency fund
+        recs.append({
+            "type": "cash_reserve",
+            "priority": "high",
+            "title": "Build Emergency Fund (3-6 months)",
+            "description": "Maintain 3-6 months of expenses in high-yield savings.",
+            "recommended_allocation": 40.0,
+            "expected_return": self.investment_products["high_yield_savings"]["expected_return"],
+            "risk_level": "low",
+        })
+
+        # 2) Core diversified equity
+        equity_alloc = 40.0 if risk_level != "low" else 25.0
+        recs.append({
+            "type": "core_equity",
+            "priority": "medium",
+            "title": "Low-Cost Index Fund",
+            "description": "Dollar-cost average into a broad market index fund.",
+            "recommended_allocation": equity_alloc,
+            "expected_return": self.investment_products["index_fund"]["expected_return"],
+            "risk_level": "moderate",
+        })
+
+        # 3) Bonds for stability
+        bond_alloc = 20.0 if risk_level == "low" else 10.0
+        recs.append({
+            "type": "bonds",
+            "priority": "medium",
+            "title": "Bond Fund for Stability",
+            "description": "Add bonds to reduce volatility and drawdowns.",
+            "recommended_allocation": bond_alloc,
+            "expected_return": self.investment_products["bond_fund"]["expected_return"],
+            "risk_level": "low",
+        })
+
+        summary = {
+            "monthly_investable": max(0.0, monthly_net) + savings_potential,
+            "risk_level": risk_level,
+        }
+        return {"recommendations": recs, "summary": summary, "priority_actions": [r["title"] for r in recs[:2]]}
+
 # Initialize investment recommendation engine
-investment_engine = InvestmentRecommendationEngine()
+investment_engine = AdvancedInvestmentRecommendationEngine()

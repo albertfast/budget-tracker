@@ -4,6 +4,7 @@
     "slug": "smartbudget",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./src/public/images/favicon_io/favicon-1024x1024.png",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -14,6 +15,29 @@
     ],
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./src/public/images/favicon_io/favicon-1024x1024.png"
+    },
+    "android": {
+      "icon": "./src/public/images/favicon_io/favicon-1024x1024.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/public/images/favicon_io/favicon-1024x1024.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./src/public/images/favicon_io/favicon-32x32.png",
+      "meta": {
+        "shortName": "SmartBudget",
+        "themeColor": "#ffffff",
+        "backgroundColor": "#ffffff",
+        "display": "standalone",
+        "apple": {
+          "statusBarStyle": "default"
+        }
+      }
+    }
   }
 }

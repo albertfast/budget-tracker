@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ..core.database import get_db
 from ..core.security import verify_token
@@ -689,7 +689,7 @@ async def get_savings_opportunities(
                     "title": f"Reduce {category} Spending",
                     "description": f"High spending in {category}: ${monthly_amount:.0f}/month",
                     "potential_monthly_savings": monthly_amount * 0.15,
-                    "suggestions": self._get_category_optimization_tips(category)
+                    "suggestions": _get_category_optimization_tips(category)
                 })
         
         return {
