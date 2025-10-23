@@ -9,23 +9,64 @@ import {
   Alert,
 } from 'react-native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOut } from '@/services/supabaseAuth';
+import { supabase } from '@/services/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AccountScreen() {
+  const { user, loading, signOut: doSignOut } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [username, setUsername] = React.useState('');
 
-  const onLogin = () => {
+  const onLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert('Missing info', 'Please enter email and password.');
+      Alert.alert('Missing info', 'Please enter email or username, and password.');
       return;
     }
-    // TODO: connect to backend auth
-    Alert.alert('Login', `Email: ${email}`);
+    try {
+      // Allow login with email or username
+      const { resolveEmailFromIdentifier } = await import('@/services/supabaseAuth');
+      const resolvedEmail = await resolveEmailFromIdentifier(email.trim());
+      await signInWithEmail(resolvedEmail, password);
+      const { data } = await supabase.auth.getUser();
+      Alert.alert('Logged in', data.user?.email ?? '');
+    } catch (e: any) {
+      Alert.alert('Login failed', e?.message || 'Unknown error');
+    }
   };
 
-  const onForgot = () => Alert.alert('Forgot password', 'Password reset flow TBD');
-  const onCreate = () => Alert.alert('Create account', 'Account creation flow TBD');
-  const onGoogle = () => Alert.alert('Google Sign-In', 'Google auth flow TBD');
+  const onForgot = () => Alert.alert('Forgot password', 'Please use email/password reset from Supabase dashboard or implement a reset screen.');
+  const onCreate = async () => {
+    if (!email.trim() || !password || !username.trim()) {
+      Alert.alert('Missing info', 'Please enter username, email, and password.');
+      return;
+    }
+    try {
+      await signUpWithEmail(email.trim(), password, username.trim());
+      Alert.alert('Check your email', 'Confirm your email to complete registration.');
+    } catch (e: any) {
+      Alert.alert('Sign up failed', e?.message || 'Unknown error');
+    }
+  };
+  const onGoogle = async () => {
+    try {
+      await signInWithGoogle();
+      const { data } = await supabase.auth.getUser();
+      Alert.alert('Logged in with Google', data.user?.email ?? '');
+    } catch (e: any) {
+      Alert.alert('Google Sign-In failed', e?.message || 'Unknown error');
+    }
+  };
+
+  const onLogout = async () => {
+    try {
+      await doSignOut();
+      Alert.alert('Logged out', 'Session ended');
+    } catch (e: any) {
+      Alert.alert('Logout failed', e?.message || 'Unknown error');
+    }
+  };
 
   return (
     <SwipeNavigationWrapper currentTab="Account">
@@ -45,14 +86,35 @@ export default function AccountScreen() {
           </View>
         </View>
 
+        {user ? (
+          <View style={{ gap: 10 }}>
+            <Text style={styles.label}>Signed in as</Text>
+            <Text style={[styles.input, { paddingVertical: 14, color: '#cfe1ff' }]}>
+              {user.email}
+            </Text>
+            <Pressable onPress={onLogout} style={[styles.button, { backgroundColor: '#f43f5e' }]}>
+              <Text style={styles.buttonText}>Log out</Text>
+            </Pressable>
+          </View>
+        ) : (
         <View style={{ gap: 10 }}>
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>Email or Username</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
             placeholderTextColor="#7a8fb2"
             keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Username (for new accounts)</Text>
+          <TextInput
+            value={username}
+            onChangeText={setUsername}
+            placeholder="yourusername"
+            placeholderTextColor="#7a8fb2"
             autoCapitalize="none"
             style={styles.input}
           />
@@ -85,6 +147,7 @@ export default function AccountScreen() {
             <Text style={styles.linkText}>Create an account</Text>
           </Pressable>
         </View>
+        )}
       </View>
     </View>
     </SwipeNavigationWrapper>

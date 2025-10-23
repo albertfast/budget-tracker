@@ -9,26 +9,29 @@ import TransactionsScreen from './src/screens/TransactionsScreen';
 import AddScreen from './src/screens/AddScreen';
 import ConnectAccountScreen from './src/screens/ConnectAccountScreen';
 import AccountScreen from './src/screens/AccountScreen';
+import { AuthProvider } from './src/context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Tab.Navigator screenOptions={{ 
+      <AuthProvider>
+        <NavigationContainer>
+          <Tab.Navigator screenOptions={{ 
           headerShown: false, 
           tabBarStyle: { display: 'none' }, // Hide bottom tabs
           tabBarActiveTintColor: '#0b1220', 
           tabBarInactiveTintColor: '#666' 
-        }}>
-          <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Transactions" component={TransactionsScreen} />
-          <Tab.Screen name="Add" component={AddScreen} />
-          <Tab.Screen name="Connect Account" component={ConnectAccountScreen} />
-          <Tab.Screen name="Account" component={AccountScreen} />
-        </Tab.Navigator>
-      </NavigationContainer>
+          }}>
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Transactions" component={TransactionsScreen} />
+            <Tab.Screen name="Add" component={AddScreen} />
+            <Tab.Screen name="Connect Account" component={ConnectAccountScreen} />
+            <Tab.Screen name="Account" component={AccountScreen} />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
