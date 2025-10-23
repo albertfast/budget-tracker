@@ -21,6 +21,7 @@ backend/.venv/
 env/
 venv/
 ENV/
+.env
 
 # VS Code / IDE
 .vscode/
