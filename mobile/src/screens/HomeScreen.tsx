@@ -28,40 +28,17 @@ export default function HomeScreen() {
         <Text style={styles.sectionHeader}>Dashboard Overview</Text>
         <Text style={styles.sectionDescription}>Track your finances and navigate between sections</Text>
         
-        {/* Navigation Menu */}
-        <View style={styles.menuContainer}>
-          <Text style={styles.menuTitle}>Quick Navigation</Text>
-          <View style={styles.menuGrid}>
-            {tabs.map((tab) => (
-              <Pressable
-                key={tab.name}
-                style={[
-                  styles.menuItem,
-                  tab.name === 'Home' && styles.menuItemActive
-                ]}
-                onPress={() => handleTabPress(tab.name)}
-                disabled={tab.name === 'Home'}
-              >
-                <Text style={styles.menuIcon}>{tab.icon}</Text>
-                <Text style={[
-                  styles.menuItemName,
-                  tab.name === 'Home' && styles.menuItemNameActive
-                ]}>
-                  {tab.name}
-                </Text>
-                <Text style={styles.menuItemDescription}>
-                  {tab.description}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-        
         {/* Financial Summary component */}
         <FinancialSummary />
         
         {/* Investment Analysis component */}
         <InvestmentAnalysis />
+        
+        <View style={styles.disclaimerContainer}>
+          <Text style={styles.disclaimerText}>
+            Disclaimer: Investment recommendations are not provided by a CFP (Certified Financial Planner), licensed investment broker, or financial professional. They are generated using known risk assessment principles and algorithmic analysis. All investment decisions are made at the user's own risk.
+          </Text>
+        </View>
         
         <View style={styles.card}>
           <Text style={styles.body}>Your financial overview and quick insights. Check the Connect Account tab to link your bank for automatic transaction syncing.</Text>
@@ -142,5 +119,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  disclaimerContainer: {
+    backgroundColor: '#2c2c2c',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ffc107',
+  },
+  disclaimerText: {
+    color: '#e0e0e0',
+    fontSize: 13,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
 });
