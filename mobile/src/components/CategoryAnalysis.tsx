@@ -186,7 +186,7 @@ export default function CategoryAnalysis({ userId, days = 30 }: CategoryAnalysis
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Total Spending Summary */}
+        {/* Total Spending Summary - npadil10 */}
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryLabel}>Total Spending ({selectedPeriod} days)</Text>
           <Text style={styles.summaryAmount}>${totalSpending.toFixed(2)}</Text>
