@@ -36,7 +36,7 @@ export default function HomeScreen() {
         
         <View style={styles.disclaimerContainer}>
           <Text style={styles.disclaimerText}>
-            Disclaimer: Investment recommendations are not provided by a CPO, licensed investment broker, or financial professional. They are generated using known risk assessment principles and algorithmic analysis. All investment decisions are made at the user's own risk.
+            Disclaimer: Investment recommendations are not provided by a CFP (Certified Financial Planner), licensed investment broker, or financial professional. They are generated using known risk assessment principles and algorithmic analysis. All investment decisions are made at the user's own risk.
           </Text>
         </View>
         
