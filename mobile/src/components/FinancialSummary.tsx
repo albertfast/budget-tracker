@@ -2,22 +2,42 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 
-export default function FinancialSummary() {
-  // Sample data - in a real app, this would come from props or API
-  const monthlyIncome = 3500;
-  const expenseCategories = [
-    { name: 'Food', amount: 450, color: '#ef4444' },
-    { name: 'Housing', amount: 1200, color: '#f97316' },
-    { name: 'Transport', amount: 280, color: '#eab308' },
-    { name: 'Bills', amount: 320, color: '#22c55e' },
-    { name: 'Shopping', amount: 180, color: '#3b82f6' },
-    { name: 'Entertainment', amount: 150, color: '#8b5cf6' },
-    { name: 'Other', amount: 120, color: '#6b7280' },
-  ];
+interface Transaction {
+  id: string;
+  category: string;
+  amount: number;
+  occurred_on: string;
+  desc?: string;
+}
 
-  const totalExpenses = expenseCategories.reduce((sum, cat) => sum + cat.amount, 0);
+interface FinancialSummaryProps {
+  transactions?: Transaction[];
+}
+
+export default function FinancialSummary({ transactions = [] }: FinancialSummaryProps) {
+  const incomeTransactions = transactions.filter(t => t.category === 'Income');
+  const expenseTransactions = transactions.filter(t => t.category !== 'Income');
+
+  const monthlyIncome = incomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  
+  // Group expenses by category
+  const categoryMap = new Map<string, number>();
+  expenseTransactions.forEach(t => {
+    const cat = t.category === 'Expense' ? (t.desc || 'General') : t.category;
+    const current = categoryMap.get(cat) || 0;
+    categoryMap.set(cat, current + Number(t.amount));
+  });
+
+  const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#6b7280'];
+  const expenseCategories = Array.from(categoryMap.entries()).map(([name, amount], index) => ({
+    name,
+    amount,
+    color: colors[index % colors.length]
+  })).sort((a, b) => b.amount - a.amount);
+
   const totalBalance = monthlyIncome - totalExpenses;
-  const maxAmount = Math.max(monthlyIncome, ...expenseCategories.map(cat => cat.amount));
+  const maxAmount = Math.max(monthlyIncome, totalExpenses > 0 ? totalExpenses : 100); // Avoid div by zero
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -78,7 +98,7 @@ export default function FinancialSummary() {
               </View>
               <Text style={[styles.tableCellAmount, styles.negative]}>${category.amount.toFixed(2)}</Text>
               <Text style={styles.tableCellPercent}>
-                {((category.amount / totalExpenses) * 100).toFixed(1)}%
+                {totalExpenses > 0 ? ((category.amount / totalExpenses) * 100).toFixed(1) : '0.0'}%
               </Text>
             </View>
           ))}
@@ -103,10 +123,11 @@ export default function FinancialSummary() {
               ]} 
             />
           </View>
+          <Text style={styles.barValue}>${monthlyIncome.toFixed(0)}</Text>
         </View>
 
         {/* Expense Bars */}
-        {expenseCategories.map((category, index) => (
+        {expenseCategories.map((category) => (
           <View key={category.name} style={styles.barRow}>
             <Text style={styles.barLabel}>{category.name}</Text>
             <View style={styles.barContainer}>
@@ -120,23 +141,9 @@ export default function FinancialSummary() {
                 ]} 
               />
             </View>
+            <Text style={styles.barValue}>${category.amount.toFixed(0)}</Text>
           </View>
         ))}
-      </View>
-
-      {/* Category Legend */}
-      <View style={styles.legendContainer}>
-        <Text style={styles.legendTitle}>Category Breakdown</Text>
-        <View style={styles.legendGrid}>
-          {expenseCategories.map((category) => (
-            <View key={category.name} style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: category.color }]} />
-              <Text style={styles.legendText}>
-                {category.name}: ${category.amount}
-              </Text>
-            </View>
-          ))}
-        </View>
       </View>
     </ScrollView>
   );

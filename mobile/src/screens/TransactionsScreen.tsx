@@ -50,27 +50,11 @@ export default function TransactionsScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      // 1. Get user's bank accounts
-      const { data: accounts, error: accError } = await supabase
-        .from('bank_accounts')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (accError) throw accError;
       
-      if (!accounts || accounts.length === 0) {
-        setItems([]);
-        return;
-      }
-
-      const accountIds = accounts.map(a => a.id);
-
-      // 2. Get transactions
       const { data: txs, error: txError } = await supabase
-        .from('transactions')
+        .from('financial_records')
         .select('*')
-        .in('bank_account_id', accountIds)
-        .order('date', { ascending: false });
+        .order('occurred_on', { ascending: false });
 
       if (txError) throw txError;
 
@@ -78,9 +62,9 @@ export default function TransactionsScreen() {
         setItems(txs.map(t => ({
           id: t.id,
           amount: t.amount,
-          category: t.category_primary || 'Other',
-          desc: t.description,
-          date: t.date ? t.date.split('T')[0] : formatISO(new Date()),
+          category: t.category || 'Other',
+          desc: t.memo,
+          date: t.occurred_on ? t.occurred_on.split('T')[0] : formatISO(new Date()),
         })));
       }
     } catch (err) {
@@ -102,64 +86,31 @@ export default function TransactionsScreen() {
     try {
       setLoading(true);
       
-      // 1. Ensure "Manual" account exists
-      let accountId: string | null = null;
-      
-      const { data: accounts } = await supabase
-        .from('bank_accounts')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('account_type', 'cash')
-        .eq('bank_name', 'Manual')
-        .limit(1);
-
-      if (accounts && accounts.length > 0) {
-        accountId = accounts[0].id;
-      } else {
-        // Create manual account
-        const { data: newAccount, error: createError } = await supabase
-          .from('bank_accounts')
-          .insert({
-            user_id: user.id,
-            account_name: 'Cash Wallet',
-            bank_name: 'Manual',
-            account_type: 'cash',
-            is_active: true
-          })
-          .select()
-          .single();
-          
-        if (createError) throw createError;
-        accountId = newAccount.id;
-      }
-
-      if (!accountId) throw new Error('Failed to get account ID');
-
       // Use local date string + noon UTC to prevent timezone shifts
       const dateStr = formatISO(date);
       const isoDate = `${dateStr}T12:00:00Z`;
 
       const txData = {
-        bank_account_id: accountId,
+        user_id: user.id,
         amount: value,
-        description: desc?.trim() || 'Manual Entry',
-        category_primary: category,
-        date: isoDate,
-        is_manual: true,
-        is_pending: false
+        memo: desc?.trim() || 'Manual Entry',
+        category: category,
+        occurred_on: isoDate,
+        source: 'manual',
+        currency: 'USD'
       };
 
       if (editingId) {
         // Update
         const { error } = await supabase
-          .from('transactions')
+          .from('financial_records')
           .update(txData)
           .eq('id', editingId);
         if (error) throw error;
       } else {
         // Insert
         const { error } = await supabase
-          .from('transactions')
+          .from('financial_records')
           .insert(txData);
         if (error) throw error;
       }
@@ -191,7 +142,7 @@ export default function TransactionsScreen() {
   const onDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('transactions')
+        .from('financial_records')
         .delete()
         .eq('id', id);
       
@@ -299,7 +250,7 @@ export default function TransactionsScreen() {
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: 'white', fontWeight: '700' }}>
-                    {item.category} • {item.amount.toFixed(2)}
+                    {item.category} • ${item.amount.toFixed(2)}
                   </Text>
                   <Text style={{ color: '#9bb4da' }}>
                     {item.date}{item.desc ? ` • ${item.desc}` : ''}
@@ -341,7 +292,7 @@ export default function TransactionsScreen() {
               {CATEGORIES.map((c) => (
                 <View key={c} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={styles.catName}>{c}</Text>
-                  <Text style={styles.catVal}>{(totals[c] || 0).toFixed(2)}</Text>
+                  <Text style={styles.catVal}>${(totals[c] || 0).toFixed(2)}</Text>
                 </View>
               ))}
             </View>

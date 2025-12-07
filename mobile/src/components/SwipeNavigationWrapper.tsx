@@ -16,7 +16,7 @@ export default function SwipeNavigationWrapper({
   children, 
   currentTab, 
   showIndicator = true,
-  showArrows = true,
+  showArrows = false,
   scrollable = true
 }: SwipeNavigationWrapperProps) {
   const navigation = useNavigation();

@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import Spacer from '@/components/Spacer';
+import { insertFinancialRecord } from '@/services/financialDataService';
 
 export default function AddScreen() {
   const [amount, setAmount] = React.useState('');
@@ -9,38 +10,38 @@ export default function AddScreen() {
   const [type, setType] = React.useState<'expense' | 'income'>('expense');
   const [transactionId, setTransactionId] = React.useState('');
   const [merchant, setMerchant] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
-  const onSave = () => {
+  const onSave = async () => {
     const value = parseFloat(amount);
     if (Number.isNaN(value) || value <= 0) {
       Alert.alert('Invalid amount', 'Please enter a positive number.');
       return;
     }
 
-    // Build the transaction details
-    let transactionDetails = `${type === 'expense' ? 'Expense' : 'Income'}: ${value.toFixed(2)}`;
-    
-    if (desc.trim()) {
-      transactionDetails += `\n${desc}`;
-    } else {
-      transactionDetails += `\n(No description provided)`;
-    }
-    
-    if (type === 'expense') {
-      if (merchant.trim()) {
-        transactionDetails += `\nMerchant: ${merchant}`;
-      }
-      if (transactionId.trim()) {
-        transactionDetails += `\nTransaction ID: ${transactionId}`;
-      }
-    }
+    setLoading(true);
+    try {
+      await insertFinancialRecord({
+        category: type === 'expense' ? 'Expense' : 'Income',
+        amount: value,
+        currency: 'USD',
+        occurred_on: new Date().toISOString(),
+        merchant: merchant || undefined,
+        memo: desc || undefined,
+        source: 'manual'
+      });
 
-    Alert.alert('Saved', transactionDetails);
-    setAmount(''); 
-    setDesc(''); 
-    setType('expense');
-    setTransactionId('');
-    setMerchant('');
+      Alert.alert('Success', 'Transaction saved successfully');
+      setAmount(''); 
+      setDesc(''); 
+      setType('expense');
+      setTransactionId('');
+      setMerchant('');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save transaction');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -119,8 +120,12 @@ export default function AddScreen() {
 
         <Spacer h={16} />
 
-        <Pressable style={styles.save} onPress={onSave}>
-          <Text style={styles.saveText}>Save</Text>
+        <Pressable style={[styles.save, loading && { opacity: 0.7 }]} onPress={onSave} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.saveText}>Save</Text>
+          )}
         </Pressable>
       </View>
     </View>

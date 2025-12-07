@@ -2,31 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
 
-export default function InvestmentAnalysis() {
+interface InvestmentAnalysisProps {
+  transactions?: any[];
+}
+
+export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnalysisProps) {
   const [selectedView, setSelectedView] = useState<'overview' | 'recommendations' | 'savings'>('overview');
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState(generateMockInvestmentData());
 
-  // Load investment data - using mock data for now, can be switched to API
   useEffect(() => {
-    loadInvestmentData();
-  }, []);
+    if (transactions.length > 0) {
+      const income = transactions.filter(t => t.category === 'Income').reduce((sum, t) => sum + Number(t.amount), 0);
+      const expenses = transactions.filter(t => t.category !== 'Income').reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      const savings = Math.max(0, income - expenses);
+      const savingsRate = income > 0 ? savings / income : 0;
+      const expenseRatio = income > 0 ? expenses / income : 0;
+      
+      // Simple logic to determine risk level based on savings rate
+      let riskLevel: 'low' | 'moderate' | 'high' = 'moderate';
+      if (savingsRate > 0.5) riskLevel = 'low';
+      else if (savingsRate > 0.3) riskLevel = 'low';
+      else if (savingsRate < 0.1) riskLevel = 'high';
 
-  const loadInvestmentData = async () => {
-    try {
-      setLoading(true);
-      // For now, use mock data. Uncomment below to use API:
-      // const apiData = await investmentApi.getInvestmentRecommendations();
-      // setData(transformApiData(apiData));
-      setData(generateMockInvestmentData());
-    } catch (error) {
-      console.error('Failed to load investment data:', error);
-      // Fallback to mock data on error
-      setData(generateMockInvestmentData());
-    } finally {
-      setLoading(false);
+      setData({
+        ...data,
+        riskProfile: {
+          ...data.riskProfile,
+          risk_level: riskLevel,
+          expense_ratio: expenseRatio
+        },
+        savingsPotential: {
+          ...data.savingsPotential,
+          savings_rate: savingsRate,
+          current_monthly_savings: savings,
+          total_monthly_potential: savings * 1.2, // Assume 20% optimization
+          annual_potential: savings * 12
+        }
+      });
     }
-  };
+  }, [transactions]);
 
   const { recommendations, riskProfile, savingsPotential } = data;
 
@@ -109,19 +124,19 @@ export default function InvestmentAnalysis() {
           <Text style={styles.recommendationDescription}>{rec.description}</Text>
           
           <View style={styles.recommendationDetails}>
-            {rec.recommended_allocation && (
+            {rec.recommended_allocation !== undefined && rec.recommended_allocation > 0 && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Monthly Allocation:</Text>
                 <Text style={styles.detailValue}>${rec.recommended_allocation}</Text>
               </View>
             )}
-            {rec.potential_savings && (
+            {rec.potential_savings !== undefined && rec.potential_savings > 0 && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Potential Savings:</Text>
                 <Text style={styles.detailValue}>${rec.potential_savings}/month</Text>
               </View>
             )}
-            {rec.expected_return && rec.expected_return > 0 && (
+            {rec.expected_return !== undefined && rec.expected_return > 0 && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Expected Return:</Text>
                 <Text style={styles.detailValue}>{(rec.expected_return * 100).toFixed(1)}%</Text>
