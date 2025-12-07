@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
 import { INCOME_CATEGORY_IDS } from '@/constants/categories';
-
 interface InvestmentAnalysisProps {
   transactions?: any[];
 }
@@ -34,51 +34,69 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
       // Generate dynamic recommendations
       const newRecommendations: InvestmentRecommendation[] = [];
       
+      // 1. Savings Rate Logic
       if (savingsRate < 0.2) {
         newRecommendations.push({
-          id: 'rec_1',
-          title: 'Increase Savings Rate',
-          description: 'Your savings rate is below 20%. Try to reduce discretionary spending.',
+          id: 'rec_save_1',
+          title: 'Boost Your Savings',
+          description: 'Your savings rate is under 20%. Small cuts in daily spending can help you reach the recommended 20% target.',
           type: 'savings',
           priority: 'high',
-          potential_impact: income * 0.05
+          potential_impact: income * 0.05,
+          risk_level: 'low',
+          action_items: ['Track daily coffee/snack purchases', 'Review subscription services', 'Set up auto-transfer on payday']
+        });
+      } else {
+        newRecommendations.push({
+          id: 'rec_save_ok',
+          title: 'Maintain Savings Momentum',
+          description: 'Great job maintaining a healthy savings rate! Consider increasing it by 1% next month.',
+          type: 'savings',
+          priority: 'low',
+          risk_level: 'low'
         });
       }
       
+      // 2. Expense Ratio Logic
       if (expenseRatio > 0.8) {
         newRecommendations.push({
-          id: 'rec_2',
+          id: 'rec_exp_high',
           title: 'High Expense Ratio',
-          description: 'Expenses are consuming over 80% of income. Review recurring bills.',
+          description: 'Expenses are consuming over 80% of your income. This leaves little room for unexpected costs.',
           type: 'allocation',
           priority: 'high',
-          potential_impact: expenses * 0.1
+          potential_impact: expenses * 0.1,
+          risk_level: 'moderate'
         });
       }
 
-      if (savings > 1000) {
+      // 3. Investment Logic (Surplus)
+      if (savings > 500) {
         newRecommendations.push({
-          id: 'rec_3',
+          id: 'rec_inv_opp',
           title: 'Investment Opportunity',
-          description: 'You have a healthy surplus. Consider diversifying into index funds.',
+          description: `You have a monthly surplus of $${savings.toFixed(0)}. Putting this into a diversified index fund could grow your wealth significantly.`,
           type: 'investment',
           priority: 'medium',
-          potential_impact: savings * 0.07 // 7% return assumption
-        });
-      } else {
-         newRecommendations.push({
-          id: 'rec_4',
-          title: 'Build Emergency Fund',
-          description: 'Focus on building a 3-6 month emergency fund before aggressive investing.',
-          type: 'savings',
-          priority: 'high',
-          potential_impact: 0
+          potential_impact: savings * 0.07, // 7% return assumption
+          expected_return: 0.07,
+          risk_level: 'moderate'
         });
       }
+
+      // 4. Emergency Fund (Always relevant if not explicitly tracked yet)
+      newRecommendations.push({
+        id: 'rec_emergency',
+        title: 'Emergency Fund Check',
+        description: 'Ensure you have 3-6 months of expenses in a high-yield savings account before aggressive investing.',
+        type: 'savings',
+        priority: 'medium',
+        risk_level: 'very_low'
+      });
 
       setData({
         ...data,
-        recommendations: newRecommendations.length > 0 ? newRecommendations : data.recommendations,
+        recommendations: newRecommendations, // Use the new list directly
         riskProfile: {
           ...data.riskProfile,
           risk_level: riskLevel,
@@ -88,8 +106,10 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
           ...data.savingsPotential,
           savings_rate: savingsRate,
           current_monthly_savings: savings,
-          total_monthly_potential: savings * 1.2, // Assume 20% optimization
-          annual_potential: savings * 12
+          total_monthly_potential: savings * 1.2 + 205, // Base + optimization
+          annual_potential: (savings * 1.2 + 205) * 12,
+          subscription_optimization_savings: 85,
+          category_optimization_savings: 120
         }
       });
     }
@@ -216,24 +236,69 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
     </View>
   );
 
-  const renderSavingsOptimization = () => (
+
+
+// ... existing imports
+
+  const renderSavingsOptimization = () => {
+    // Circular Progress Logic
+    const radius = 80;
+    const strokeWidth = 12;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min(1, savingsPotential.current_monthly_savings / savingsPotential.total_monthly_potential);
+    const strokeDashoffset = circumference - (progress * circumference);
+    
+    return (
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionTitle}>📈 Savings Optimization</Text>
       
       <View style={styles.optimizationCard}>
-        <Text style={styles.cardTitle}>Current vs Potential Savings</Text>
-        
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <Svg width={200} height={200} viewBox="0 0 200 200">
+            {/* Background Circle */}
+            <Circle
+              cx="100"
+              cy="100"
+              r={radius}
+              stroke="#1e3a8a"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              opacity={0.3}
+            />
+            {/* Progress Circle */}
+            <G rotation="-90" origin="100, 100">
+              <Circle
+                cx="100"
+                cy="100"
+                r={radius}
+                stroke="#3b82f6"
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+              />
+            </G>
+          </Svg>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: '#9fb3c8', fontSize: 14 }}>Efficiency</Text>
+            <Text style={{ color: '#ffffff', fontSize: 32, fontWeight: 'bold' }}>{(progress * 100).toFixed(0)}%</Text>
+          </View>
+        </View>
+
         <View style={styles.comparisonContainer}>
           <View style={styles.comparisonItem}>
-            <Text style={styles.comparisonLabel}>Current Monthly Savings</Text>
-            <Text style={styles.comparisonAmount}>${savingsPotential.current_monthly_savings}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.comparisonLabel}>Current Savings</Text>
+              <Text style={[styles.comparisonAmount, { color: '#3b82f6' }]}>${savingsPotential.current_monthly_savings.toFixed(0)}</Text>
+            </View>
             <View style={styles.progressBar}>
               <View 
                 style={[
                   styles.progressFill, 
                   { 
                     width: `${(savingsPotential.current_monthly_savings / savingsPotential.total_monthly_potential) * 100}%`,
-                    backgroundColor: '#10b981'
+                    backgroundColor: '#3b82f6'
                   }
                 ]} 
               />
@@ -241,26 +306,28 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
           </View>
           
           <View style={styles.comparisonItem}>
-            <Text style={styles.comparisonLabel}>Potential Monthly Savings</Text>
-            <Text style={styles.comparisonAmount}>${savingsPotential.total_monthly_potential}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.comparisonLabel}>Potential Savings</Text>
+              <Text style={[styles.comparisonAmount, { color: '#10b981' }]}>${savingsPotential.total_monthly_potential.toFixed(0)}</Text>
+            </View>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '100%', backgroundColor: '#3b82f6' }]} />
+              <View style={[styles.progressFill, { width: '100%', backgroundColor: '#10b981' }]} />
             </View>
           </View>
         </View>
 
         <View style={styles.optimizationBreakdown}>
-          <Text style={styles.breakdownTitle}>Optimization Opportunities:</Text>
+          <Text style={styles.breakdownTitle}>Optimization Opportunities</Text>
           <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Subscription Optimization:</Text>
+            <Text style={styles.breakdownLabel}>Subscription Optimization</Text>
             <Text style={styles.breakdownValue}>+${savingsPotential.subscription_optimization_savings}</Text>
           </View>
           <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Category Optimization:</Text>
+            <Text style={styles.breakdownLabel}>Category Optimization</Text>
             <Text style={styles.breakdownValue}>+${savingsPotential.category_optimization_savings}</Text>
           </View>
           <View style={[styles.breakdownRow, styles.breakdownTotal]}>
-            <Text style={styles.breakdownTotalLabel}>Additional Monthly Potential:</Text>
+            <Text style={styles.breakdownTotalLabel}>Total Potential Increase</Text>
             <Text style={styles.breakdownTotalValue}>
               +${savingsPotential.subscription_optimization_savings + savingsPotential.category_optimization_savings}
             </Text>
@@ -269,6 +336,7 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
       </View>
     </View>
   );
+  };
 
   return (
     <View style={styles.container}>
