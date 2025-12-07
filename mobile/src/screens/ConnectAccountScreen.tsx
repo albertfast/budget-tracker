@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PlaidConnection from '../components/PlaidConnection';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import { makeAuthenticatedRequest, authService } from '../services/authService';
@@ -71,15 +72,19 @@ export default function ConnectAccountScreen() {
     try {
       setConnectionStatus('connecting');
       
-      // Ensure user is authenticated (mock for demo)
-      if (!authService.isAuthenticated()) {
-        authService.mockLogin();
+      // Get user ID from AsyncStorage
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Error', 'You must be logged in to connect a bank account');
+        setConnectionStatus('error');
+        return;
       }
       
-      // Exchange public token for access token using the correct endpoint
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/plaid-legacy/exchange-token`, {
+      // Complete Plaid login with the new auth endpoint
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/auth/plaid/complete-login`, {
         method: 'POST',
         body: JSON.stringify({
+          user_id: userId,
           public_token: publicToken
         })
       });
@@ -91,11 +96,14 @@ export default function ConnectAccountScreen() {
         setShowPlaidConnection(false);
         
         Alert.alert(
-          'Success!',
-          `Connected to ${metadata.institution.name} successfully. ${data.message}`
+          '✅ Success!',
+          `Connected to ${metadata.institution.name}\n\n` +
+          `Accounts: ${data.accounts_count}\n` +
+          `Transactions Synced: ${data.transactions_synced}`
         );
       } else {
-        throw new Error('Failed to exchange token');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to complete Plaid login');
       }
     } catch (error) {
       console.error('Plaid success error:', error);
