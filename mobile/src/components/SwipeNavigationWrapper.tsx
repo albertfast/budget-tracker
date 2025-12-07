@@ -442,8 +442,7 @@ export default function SwipeNavigationWrapper({
                 </View>
               )}
               
-              {/* Hamburger Menu - Always on top */}
-              <HamburgerMenu currentTab={currentTab} />
+              {/* Hamburger Menu removed as per user request */}
             </View>
           </PanGestureHandler>
         </TapGestureHandler>
