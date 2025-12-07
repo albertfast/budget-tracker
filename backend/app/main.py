@@ -1,14 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
+import logging
 
 from .core.config import settings
-from .core.database import engine
-from .models.database import Base
-from .api import auth, banks, insights
+from .core.database import init_db, check_db_connection, Base, engine
+from .api import auth, insights  # banks temporarily disabled - needs database
+from .api.plaid_legacy import router as plaid_legacy_router
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Log startup information
+logger.info(f"Starting SmartBudget API in {settings.APP_MODE.upper()} mode")
+logger.info(f"Database: {settings.DATABASE_URL}")
+
+# Check database connection
+if not check_db_connection():
+    logger.warning("Database connection failed during startup")
+
+# Initialize database tables
+init_db()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -19,7 +34,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8081"],  # React Native and web
+    allow_origins=["*"],  # Allow all origins for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,11 +43,20 @@ app.add_middleware(
 # Health check endpoint
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "SmartBudget API"}
+    db_connected = check_db_connection()
+    return {
+        "status": "ok" if db_connected else "degraded",
+        "service": "SmartBudget API",
+        "mode": settings.APP_MODE,
+        "database": "connected" if db_connected else "disconnected"
+    }
+
+# Routers
+app.include_router(plaid_legacy_router, prefix="/api")
 
 # Include API routers
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["authentication"])
-app.include_router(banks.router, prefix=f"{settings.API_V1_STR}/banks", tags=["bank-accounts"])
+# app.include_router(banks.router, prefix=f"{settings.API_V1_STR}/banks", tags=["bank-accounts"])  # Disabled - needs database
 app.include_router(insights.router, prefix=f"{settings.API_V1_STR}/insights", tags=["financial-insights"])
 
 @app.get("/")
@@ -40,6 +64,30 @@ def root():
     return {
         "message": "Welcome to SmartBudget API",
         "version": "1.0.0",
+        "mode": settings.APP_MODE,
+        "database": "SQLite" if settings.is_offline_mode else "PostgreSQL",
         "docs": "/docs",
         "health": "/health"
     }
+
+@app.on_event("startup")
+async def startup_event():
+    """Run tasks on application startup"""
+    logger.info("=" * 60)
+    logger.info("SmartBudget API Started Successfully")
+    logger.info(f"Mode: {settings.APP_MODE.upper()}")
+    logger.info(f"Database: {'SQLite' if settings.is_offline_mode else 'PostgreSQL'}")
+    logger.info(f"API Docs: http://localhost:8000/docs")
+    logger.info("=" * 60)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Run tasks on application shutdown"""
+    logger.info("Shutting down SmartBudget API...")
+    # Close database connections gracefully if engine exists
+    try:
+        if 'engine' in globals() and engine is not None:
+            engine.dispose()
+            logger.info("Database connections closed")
+    except Exception as e:
+        logger.warning(f"Could not dispose database engine: {e}")

@@ -7,9 +7,11 @@ from datetime import datetime
 
 from ..core.database import get_db
 from ..core.security import verify_token
-from ..models.database import User, BankAccount, PlaidLinkSession
+from ..models.user import User
+from ..models.bank_account import BankAccount
+from ..models.plaid_link_session import PlaidLinkSession
 from ..services.plaid_service import plaid_service
-from ..services.transaction_processor import transaction_processor
+from ..services.transaction_service import transaction_service
 from ..services.encryption_service import encrypt_sensitive_data, decrypt_sensitive_data
 
 router = APIRouter()
@@ -230,7 +232,7 @@ async def sync_account(
         sync_data = plaid_service.sync_transactions(decrypted_token)
         
         # Process and save transactions to database
-        processing_result = transaction_processor.process_plaid_transactions(
+        processing_result = transaction_service.process_plaid_transactions(
             db, account, sync_data["transactions"]
         )
         

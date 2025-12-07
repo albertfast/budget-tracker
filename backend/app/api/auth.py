@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from ..core.database import get_db
 from ..core.security import verify_password, get_password_hash, create_access_token
-from ..models.database import User
+from ..models.user import User
 
 router = APIRouter()
 security = HTTPBearer()

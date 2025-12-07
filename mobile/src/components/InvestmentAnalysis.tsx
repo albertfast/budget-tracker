@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
+import PortfolioUpload from './PortfolioUpload';
 
 export default function InvestmentAnalysis() {
-  const [selectedView, setSelectedView] = useState<'overview' | 'recommendations' | 'savings'>('overview');
+  const [selectedView, setSelectedView] = useState<'overview' | 'recommendations' | 'savings' | 'portfolio'>('overview');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(generateMockInvestmentData());
 
@@ -275,12 +276,19 @@ export default function InvestmentAnalysis() {
         >
           <Text style={[styles.tabText, selectedView === 'savings' && styles.tabTextActive]}>Savings</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, selectedView === 'portfolio' && styles.tabActive]}
+          onPress={() => setSelectedView('portfolio')}
+        >
+          <Text style={[styles.tabText, selectedView === 'portfolio' && styles.tabTextActive]}>Portfolio</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {selectedView === 'overview' && renderOverview()}
         {selectedView === 'recommendations' && renderRecommendations()}
         {selectedView === 'savings' && renderSavingsOptimization()}
+        {selectedView === 'portfolio' && <PortfolioUpload />}
       </ScrollView>
     </View>
   );

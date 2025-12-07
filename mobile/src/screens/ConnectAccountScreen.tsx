@@ -14,6 +14,8 @@ import PlaidConnection from '../components/PlaidConnection';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import { makeAuthenticatedRequest, authService } from '../services/authService';
 
+const API_BASE_URL = 'http://localhost:8000/api';
+
 type BankProvider = {
   id: string;
   name: string;
@@ -23,6 +25,22 @@ type BankProvider = {
 
 type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
+type Account = {
+  account_id: string;
+  name: string;
+  mask?: string;
+  type?: string;
+  balance?: number;
+};
+
+type Transaction = {
+  transaction_id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: string;
+};
+
 export default function ConnectAccountScreen() {
   const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatus>('idle');
   const [selectedProvider, setSelectedProvider] = React.useState<string>('');
@@ -31,6 +49,12 @@ export default function ConnectAccountScreen() {
   const [enableAutoSync, setEnableAutoSync] = React.useState(true);
   const [syncFrequency, setSyncFrequency] = React.useState('daily');
   const [showPlaidConnection, setShowPlaidConnection] = React.useState(false);
+  const [accountsData, setAccountsData] = React.useState<Account[]>([]);
+  const [transactionsData, setTransactionsData] = React.useState<Transaction[]>([]);
+  const [showAccounts, setShowAccounts] = React.useState(false);
+  const [showTransactions, setShowTransactions] = React.useState(false);
+  const [loadingAccounts, setLoadingAccounts] = React.useState(false);
+  const [loadingTransactions, setLoadingTransactions] = React.useState(false);
 
   // Mock bank providers - in real app, this would come from API
   const bankProviders: BankProvider[] = [
@@ -53,7 +77,7 @@ export default function ConnectAccountScreen() {
       }
       
       // Exchange public token for access token using the correct endpoint
-      const response = await makeAuthenticatedRequest('/api/banks/link/exchange-token', {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/plaid-legacy/exchange-token`, {
         method: 'POST',
         body: JSON.stringify({
           public_token: publicToken
@@ -150,11 +174,63 @@ export default function ConnectAccountScreen() {
           onPress: async () => {
             setConnectionStatus('idle');
             setSelectedProvider('');
+            setAccountsData([]);
+            setTransactionsData([]);
+            setShowAccounts(false);
+            setShowTransactions(false);
             // TODO: Call API to disconnect
           },
         },
       ]
     );
+  };
+
+  // Fetch accounts from Plaid legacy endpoint
+  const fetchAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/plaid-legacy/accounts`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAccountsData(data.accounts || []);
+        setShowAccounts(true);
+        Alert.alert('Success', `Found ${data.accounts?.length || 0} accounts`);
+      } else {
+        throw new Error('Failed to fetch accounts');
+      }
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+      Alert.alert('Error', 'Failed to fetch accounts. Please try again.');
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  // Fetch transactions from Plaid legacy endpoint
+  const fetchTransactions = async () => {
+    try {
+      setLoadingTransactions(true);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/plaid-legacy/transactions`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTransactionsData(data.transactions || []);
+        setShowTransactions(true);
+        Alert.alert('Success', `Found ${data.transactions?.length || 0} transactions`);
+      } else {
+        throw new Error('Failed to fetch transactions');
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      Alert.alert('Error', 'Failed to fetch transactions. Please try again.');
+    } finally {
+      setLoadingTransactions(false);
+    }
   };
 
   const renderBankProvider = (provider: BankProvider) => (
@@ -185,7 +261,7 @@ export default function ConnectAccountScreen() {
 
   if (connectionStatus === 'connected') {
     return (
-      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.screen}>
         <Text style={styles.title}>Connect Account</Text>
         
         <View style={styles.successCard}>
@@ -215,6 +291,78 @@ export default function ConnectAccountScreen() {
             </View>
           </View>
 
+          {/* Fetch Data Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <Pressable 
+              style={[styles.fetchButton, loadingAccounts && styles.buttonDisabled]}
+              onPress={fetchAccounts}
+              disabled={loadingAccounts}
+            >
+              {loadingAccounts ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.fetchButtonText}>📊 Fetch Accounts</Text>
+              )}
+            </Pressable>
+
+            <Pressable 
+              style={[styles.fetchButton, loadingTransactions && styles.buttonDisabled]}
+              onPress={fetchTransactions}
+              disabled={loadingTransactions}
+            >
+              {loadingTransactions ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.fetchButtonText}>💳 Fetch Transactions</Text>
+              )}
+            </Pressable>
+          </View>
+
+          {/* Display Accounts */}
+          {showAccounts && accountsData.length > 0 && (
+            <View style={styles.dataContainer}>
+              <Text style={styles.dataTitle}>📊 Accounts ({accountsData.length})</Text>
+              {accountsData.map((account) => (
+                <View key={account.account_id} style={styles.accountCard}>
+                  <Text style={styles.accountName}>{account.name}</Text>
+                  {account.mask && <Text style={styles.accountMask}>•••• {account.mask}</Text>}
+                  {account.type && <Text style={styles.accountType}>{account.type}</Text>}
+                  {account.balance !== undefined && (
+                    <Text style={styles.accountBalance}>${account.balance.toFixed(2)}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Display Transactions */}
+          {showTransactions && transactionsData.length > 0 && (
+            <View style={styles.dataContainer}>
+              <Text style={styles.dataTitle}>💳 Recent Transactions ({transactionsData.length})</Text>
+              {transactionsData.slice(0, 10).map((transaction) => (
+                <View key={transaction.transaction_id} style={styles.transactionCard}>
+                  <View style={styles.transactionLeft}>
+                    <Text style={styles.transactionDescription} numberOfLines={1}>
+                      {transaction.description}
+                    </Text>
+                    <Text style={styles.transactionDate}>{transaction.date}</Text>
+                  </View>
+                  <Text style={[
+                    styles.transactionAmount,
+                    transaction.amount > 0 ? styles.amountPositive : styles.amountNegative
+                  ]}>
+                    {transaction.amount > 0 ? '+' : ''} ${Math.abs(transaction.amount).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+              {transactionsData.length > 10 && (
+                <Text style={styles.moreText}>
+                  ... and {transactionsData.length - 10} more transactions
+                </Text>
+              )}
+            </View>
+          )}
+
           <Pressable style={styles.disconnectButton} onPress={handleDisconnect}>
             <Text style={styles.disconnectButtonText}>Disconnect Bank</Text>
           </Pressable>
@@ -225,7 +373,7 @@ export default function ConnectAccountScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Connect Account">
-      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.screen}>
         <Text style={styles.sectionHeader}>Bank Integration</Text>
         <Text style={styles.sectionDescription}>Connect your bank accounts for automatic transaction sync</Text>
       
@@ -347,7 +495,6 @@ export default function ConnectAccountScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b1220', paddingHorizontal: 20, paddingVertical: 20 },
-  scrollContent: { paddingTop: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center', marginTop: 8 },
   card: { backgroundColor: '#111a30', borderRadius: 12, marginVertical: 16, padding: 20, marginHorizontal: 8 },
   subtitle: { color: 'white', fontSize: 18, fontWeight: '600', marginBottom: 8 },
@@ -487,5 +634,125 @@ const styles = StyleSheet.create({
     color: '#bfdbfe',
     fontSize: 12,
     fontWeight: '500',
+  },
+  
+  // Fetch data buttons and display
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginVertical: 20,
+    width: '100%',
+  },
+  fetchButton: {
+    flex: 1,
+    backgroundColor: '#10b981',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fetchButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  // Data display containers
+  dataContainer: {
+    marginTop: 24,
+    marginBottom: 16,
+    backgroundColor: '#0f1930',
+    borderRadius: 10,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
+  },
+  dataTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+
+  // Account card styles
+  accountCard: {
+    backgroundColor: '#111a30',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: '#06b6d4',
+  },
+  accountName: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  accountMask: {
+    color: '#a9c1ea',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  accountType: {
+    color: '#9bb4da',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  accountBalance: {
+    color: '#10b981',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Transaction card styles
+  transactionCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#111a30',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f59e0b',
+  },
+  transactionLeft: {
+    flex: 1,
+  },
+  transactionDescription: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  transactionDate: {
+    color: '#9bb4da',
+    fontSize: 12,
+  },
+  transactionAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  amountPositive: {
+    color: '#10b981',
+  },
+  amountNegative: {
+    color: '#ef4444',
+  },
+  moreText: {
+    color: '#9bb4da',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#223459',
   },
 });

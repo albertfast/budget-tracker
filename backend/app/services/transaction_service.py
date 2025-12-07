@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-from ..models.database import Transaction, BankAccount, User
+from ..models.transaction import Transaction
+from ..models.bank_account import BankAccount
+from ..models.user import User
 from ..services.plaid_service import plaid_service
 from .encryption_service import encrypt_sensitive_data, decrypt_sensitive_data
 import logging
@@ -323,4 +325,4 @@ class TransactionProcessor:
         }
 
 # Initialize transaction processor
-transaction_processor = TransactionProcessor()
+transaction_service = TransactionProcessor()

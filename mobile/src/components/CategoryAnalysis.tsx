@@ -185,7 +185,7 @@ export default function CategoryAnalysis({ userId, days = 30 }: CategoryAnalysis
         ))}
       </View>
 
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Total Spending Summary */}
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryLabel}>Total Spending ({selectedPeriod} days)</Text>
@@ -291,9 +291,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     maxHeight: 400,
-  },
-  scrollContent: {
-    paddingTop: 20,
   },
   summaryContainer: {
     backgroundColor: '#0f1930',

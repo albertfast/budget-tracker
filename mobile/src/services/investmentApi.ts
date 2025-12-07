@@ -157,6 +157,38 @@ class InvestmentApiService {
     
     return this.makeRequest(endpoint);
   }
+
+  async uploadPortfolio(file: any): Promise<any> {
+    const url = `${API_BASE_URL}/insights/upload-financial-document`;
+    
+    const formData = new FormData();
+    formData.append('file', {
+      uri: file.uri,
+      type: 'text/csv',
+      name: file.name || 'financial-document.csv',
+    } as any);
+
+    const headers: Record<string, string> = {};
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Document upload failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async getPortfolioChartData(symbol: string, period: string = '1y'): Promise<any> {
+    return this.makeRequest(`/insights/portfolio-chart-data/${symbol}?period=${period}`);
+  }
 }
 
 // Export singleton instance

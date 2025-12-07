@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xbrl xmlns="http://www.xbrl.org/2003/instance"
+      xmlns:xbrli="http://www.xbrl.org/2003/instance"
+      xmlns:us-gaap="http://fasb.org/us-gaap/2023"
+      xmlns:dei="http://xbrl.sec.gov/dei/2023">
+  
+  <!-- Company Information -->
+  <dei:EntityRegistrantName>Apple Inc.</dei:EntityRegistrantName>
+  <dei:EntityCentralIndexKey>0000320193</dei:EntityCentralIndexKey>
+  <dei:TradingSymbol>AAPL</dei:TradingSymbol>
+  <dei:DocumentType>10-K</dei:DocumentType>
+  <dei:DocumentPeriodEndDate>2023-09-30</dei:DocumentPeriodEndDate>
+  <dei:DocumentFiscalYearFocus>2023</dei:DocumentFiscalYearFocus>
+  
+  <!-- Contexts -->
+  <xbrli:context id="FY2023">
+    <xbrli:entity>
+      <xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier>
+    </xbrli:entity>
+    <xbrli:period>
+      <xbrli:startDate>2022-10-01</xbrli:startDate>
+      <xbrli:endDate>2023-09-30</xbrli:endDate>
+    </xbrli:period>
+  </xbrli:context>
+  
+  <xbrli:context id="FY2023_Instant">
+    <xbrli:entity>
+      <xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier>
+    </xbrli:entity>
+    <xbrli:period>
+      <xbrli:instant>2023-09-30</xbrli:instant>
+    </xbrli:period>
+  </xbrli:context>
+  
+  <!-- Units -->
+  <xbrli:unit id="USD">
+    <xbrli:measure>iso4217:USD</xbrli:measure>
+  </xbrli:unit>
+  
+  <!-- Financial Data -->
+  <us-gaap:Revenues contextRef="FY2023" unitRef="USD" decimals="-6">
+    394328000000
+  </us-gaap:Revenues>
+  
+  <us-gaap:NetIncomeLoss contextRef="FY2023" unitRef="USD" decimals="-6">
+    96995000000
+  </us-gaap:NetIncomeLoss>
+  
+  <us-gaap:Assets contextRef="FY2023_Instant" unitRef="USD" decimals="-6">
+    352755000000
+  </us-gaap:Assets>
+  
+  <us-gaap:StockholdersEquity contextRef="FY2023_Instant" unitRef="USD" decimals="-6">
+    62146000000
+  </us-gaap:StockholdersEquity>
+  
+  <us-gaap:NetCashProvidedByUsedInOperatingActivities contextRef="FY2023" unitRef="USD" decimals="-6">
+    110543000000
+  </us-gaap:NetCashProvidedByUsedInOperatingActivities>
+  
+</xbrl>

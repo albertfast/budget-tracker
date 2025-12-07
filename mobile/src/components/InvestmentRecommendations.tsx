@@ -260,7 +260,7 @@ export default function InvestmentRecommendations({ userId }: InvestmentRecommen
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading recommendations...</Text>
@@ -478,8 +478,5 @@ const styles = StyleSheet.create({
     textShadowColor: '#000000',
     textShadowOffset: { width: 0.5, height: 0.5 },
     textShadowRadius: 1,
-  },
-  scrollContent: {
-    paddingTop: 20,
   },
 });

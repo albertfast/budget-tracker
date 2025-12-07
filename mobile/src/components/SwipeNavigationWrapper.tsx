@@ -14,13 +14,12 @@ interface SwipeNavigationWrapperProps {
 export default function SwipeNavigationWrapper({ 
   children, 
   currentTab, 
-  showIndicator = true,
-  showArrows = true 
+  showIndicator = true
 }: SwipeNavigationWrapperProps) {
   const navigation = useNavigation();
 
   // Tab order for swipe navigation
-  const tabs = ['Home', 'Add', 'Connect Account', 'Account'];
+  const tabs = ['Home', 'Transactions', 'FinancialAnalysis', 'FinancialAnalysisTwo', 'Screening', 'Add', 'Account'];
   const currentTabIndex = tabs.indexOf(currentTab);
   
   // State for advanced gesture tracking
@@ -46,7 +45,10 @@ export default function SwipeNavigationWrapper({
   const getPageBackgroundColor = (tabName: string) => {
     const pageColors: { [key: string]: string } = {
       'Home': '#0b1220',
-      'Transactions': '#0b1220', 
+      'Transactions': '#0b1220',
+      'FinancialAnalysis': '#0b1220',
+      'FinancialAnalysisTwo': '#0b1220',
+      'Screening': '#0b1220', 
       'Add': '#0b1220',
       'Connect Account': '#0b1220',
       'Account': '#0b1220'
@@ -111,9 +113,12 @@ export default function SwipeNavigationWrapper({
     tapTimeoutRef.current = setTimeout(() => {
       if (tapCount === 1) {
         // Single tap - do nothing special
-      } else if (tapCount >= 2) {
-        // Double/Triple tap - navigate multiple tabs over or to highest cardinality tab (Account)
-        const targetIndex = Math.min(currentTabIndex + 2, tabs.length - 1);
+      } else if (tapCount === 2) {
+        // Double tap - navigate to second tab (Transactions)
+        navigateToTab('Transactions');
+      } else if (tapCount >= 3) {
+        // Triple tap - navigate three tabs over or to highest cardinality tab (Account)
+        const targetIndex = Math.min(currentTabIndex + 3, tabs.length - 1);
         navigateToTab(tabs[targetIndex]);
       }
       setTapCount(0);
@@ -381,31 +386,7 @@ export default function SwipeNavigationWrapper({
                   <Text style={styles.topTabText}>{currentTab}</Text>
                 </View>
               )}              {/* Navigation Arrows */}
-              {showArrows && (
-                <>
-                  {/* Left Arrow */}
-                  {currentTabIndex > 0 && (
-                    <Pressable 
-                      style={[styles.navArrow, styles.leftArrow]}
-                      onPress={navigateToPrevious}
-                      hitSlop={{ top: 25, bottom: 25, left: 15, right: 15 }} // Enhanced mobile touch targets
-                    >
-                      <Text style={styles.arrowText}>‹</Text>
-                    </Pressable>
-                  )}
-                  
-                  {/* Right Arrow */}
-                  {currentTabIndex < tabs.length - 1 && (
-                    <Pressable 
-                      style={[styles.navArrow, styles.rightArrow]}
-                      onPress={navigateToNext}
-                      hitSlop={{ top: 25, bottom: 25, left: 15, right: 15 }} // Enhanced mobile touch targets
-                    >
-                      <Text style={styles.arrowText}>›</Text>
-                    </Pressable>
-                  )}
-                </>
-              )}
+              {/* Navigation arrows removed for all pages/tabs */}
               
               <ScrollView 
                 style={styles.scrollContent}

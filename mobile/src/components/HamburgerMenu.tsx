@@ -20,6 +20,8 @@ export default function HamburgerMenu({ currentTab }: HamburgerMenuProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const tabs = [
+    { name: 'Home', icon: '🏠', description: 'Dashboard & Overview' },
+    { name: 'Transactions', icon: '💳', description: 'View & Add Transactions' },
     { name: 'Add', icon: '➕', description: 'Quick Entry Form' },
     { name: 'Connect Account', icon: '🏦', description: 'Link Bank Account' },
     { name: 'Account', icon: '👤', description: 'Profile & Settings' },

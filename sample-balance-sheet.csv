@@ -1,0 +1,20 @@
+Account,Amount
+Current Assets,150000
+Cash,50000
+Accounts Receivable,60000
+Inventory,40000
+Non-Current Assets,350000
+Property Plant Equipment,250000
+Intangible Assets,100000
+Total Assets,500000
+Current Liabilities,75000
+Accounts Payable,40000
+Short-term Debt,35000
+Long-term Liabilities,175000
+Long-term Debt,150000
+Deferred Tax Liabilities,25000
+Total Liabilities,250000
+Shareholders Equity,250000
+Common Stock,100000
+Retained Earnings,150000
+Date,2024-03-31

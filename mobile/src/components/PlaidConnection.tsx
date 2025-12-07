@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { makeAuthenticatedRequest, authService } from '../services/authService';
 
+const API_BASE_URL = 'http://localhost:8000/api';
+
 interface PlaidConnectionProps {
   onSuccess: (publicToken: string, metadata: any) => void;
   onError: (error: any) => void;
@@ -44,17 +46,18 @@ export default function PlaidConnection({ onSuccess, onError }: PlaidConnectionP
         authService.mockLogin();
       }
 
-      // Call the backend to create a link token using the correct endpoint
-      const response = await makeAuthenticatedRequest('/api/banks/link/create-token', {
-        method: 'POST',
-        body: JSON.stringify({})
+      // Legacy flow: fetch legacy Link init payload (public_key-based)
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/plaid-legacy/link-init`, {
+        method: 'GET'
       });
 
       if (response.ok) {
         const data = await response.json();
-        setLinkToken(data.link_token);
+        // For demo purposes, store a pseudo token to enable button
+        // Real legacy Link uses public_key + products + env on the client init
+        setLinkToken(data.public_key || 'legacy-public-key');
       } else {
-        throw new Error('Failed to create link token');
+        throw new Error('Failed to initialize legacy Plaid Link');
       }
     } catch (err) {
       setError('Failed to initialize Plaid Link. Please try again.');
