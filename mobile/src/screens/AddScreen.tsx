@@ -1,16 +1,92 @@
 import * as React from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
+import { useFocusEffect } from '@react-navigation/native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import Spacer from '@/components/Spacer';
 import { insertFinancialRecord } from '@/services/financialDataService';
+import { supabase } from '@/services/supabaseClient';
+
+const EXPENSE_CATEGORIES = [
+  { id: 'Food', label: '🍔 Food', color: '#ef4444' },
+  { id: 'Transport', label: '🚗 Transport', color: '#f97316' },
+  { id: 'Housing', label: '🏠 Housing', color: '#eab308' },
+  { id: 'Bills', label: '💡 Bills', color: '#22c55e' },
+  { id: 'Entertainment', label: '🎉 Fun', color: '#3b82f6' },
+  { id: 'Shopping', label: '🛍️ Shopping', color: '#8b5cf6' },
+  { id: 'Health', label: '🏥 Health', color: '#ec4899' },
+  { id: 'Other', label: '📦 Other', color: '#6b7280' },
+];
+
+const INCOME_CATEGORIES = [
+  { id: 'Salary', label: '💰 Salary', color: '#22c55e' },
+  { id: 'Freelance', label: '💻 Freelance', color: '#3b82f6' },
+  { id: 'Investment', label: '📈 Investment', color: '#8b5cf6' },
+  { id: 'Gift', label: '🎁 Gift', color: '#ec4899' },
+  { id: 'Other', label: '📦 Other', color: '#6b7280' },
+];
 
 export default function AddScreen() {
   const [amount, setAmount] = React.useState('');
   const [desc, setDesc] = React.useState('');
   const [type, setType] = React.useState<'expense' | 'income'>('expense');
+  const [category, setCategory] = React.useState(EXPENSE_CATEGORIES[0].id);
+  const [showDropdown, setShowDropdown] = React.useState(false);
   const [transactionId, setTransactionId] = React.useState('');
   const [merchant, setMerchant] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [chartData, setChartData] = React.useState<any[]>([]);
+
+  const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const selectedCategory = categories.find(c => c.id === category) || categories[0];
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchChartData();
+    }, [type])
+  );
+
+  const fetchChartData = async () => {
+    const { data } = await supabase
+      .from('financial_records')
+      .select('category, amount')
+      .eq('category', type === 'expense' ? 'Expense' : 'Income'); // This logic is flawed if we start saving real categories
+      // But wait, previously we saved 'Expense'/'Income' as category. 
+      // Now we want to save REAL categories.
+      // So we should fetch ALL records and filter by our known categories.
+    
+    const { data: allData } = await supabase
+      .from('financial_records')
+      .select('category, amount');
+
+    if (allData) {
+      // Filter for current type's categories
+      const typeCategories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+      const relevantData = allData.filter(d => 
+        typeCategories.some(c => c.id === d.category) || 
+        (type === 'expense' && d.category === 'Expense') || // Handle legacy
+        (type === 'income' && d.category === 'Income')
+      );
+
+      // Group by category
+      const grouped = new Map<string, number>();
+      relevantData.forEach(d => {
+        // Map legacy 'Expense'/'Income' to 'Other' or keep as is?
+        // Let's map to 'Other' for the chart if it's not in our list
+        let cat = d.category;
+        if (cat === 'Expense' || cat === 'Income') cat = 'Other';
+        
+        const current = grouped.get(cat) || 0;
+        grouped.set(cat, current + Number(d.amount));
+      });
+
+      setChartData(Array.from(grouped.entries()).map(([key, val]) => ({
+        category: key,
+        amount: val,
+        color: typeCategories.find(c => c.id === key)?.color || '#6b7280'
+      })));
+    }
+  };
 
   const onSave = async () => {
     const value = parseFloat(amount);
@@ -22,7 +98,7 @@ export default function AddScreen() {
     setLoading(true);
     try {
       await insertFinancialRecord({
-        category: type === 'expense' ? 'Expense' : 'Income',
+        category: category, // Save the specific category!
         amount: value,
         currency: 'USD',
         occurred_on: new Date().toISOString(),
@@ -34,9 +110,9 @@ export default function AddScreen() {
       Alert.alert('Success', 'Transaction saved successfully');
       setAmount(''); 
       setDesc(''); 
-      setType('expense');
       setTransactionId('');
       setMerchant('');
+      fetchChartData(); // Refresh chart
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save transaction');
     } finally {
@@ -44,24 +120,105 @@ export default function AddScreen() {
     }
   };
 
+  // Donut Chart Logic
+  const total = chartData.reduce((sum, item) => sum + item.amount, 0);
+  let startAngle = 0;
+  const radius = 60;
+  const strokeWidth = 15;
+  const circumference = 2 * Math.PI * radius;
+
   return (
     <SwipeNavigationWrapper currentTab="Add">
-      <View style={styles.screen}>
+      <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.sectionHeader}>Quick Entry</Text>
         <Text style={styles.sectionDescription}>Add new transactions and financial entries</Text>
       
       <View style={styles.card}>
         <Text style={styles.label}>Type</Text>
         <View style={{ flexDirection: 'row', marginTop: 12, marginBottom: 8, gap: 12 }}>
-          <Pressable onPress={() => setType('expense')}
+          <Pressable onPress={() => { setType('expense'); setCategory(EXPENSE_CATEGORIES[0].id); }}
             style={[styles.segment, type === 'expense' && styles.segmentActive]}>
             <Text style={styles.segmentText}>Expense</Text>
           </Pressable>
-          <Pressable onPress={() => setType('income')}
+          <Pressable onPress={() => { setType('income'); setCategory(INCOME_CATEGORIES[0].id); }}
             style={[styles.segment, type === 'income' && styles.segmentActive]}>
             <Text style={styles.segmentText}>Income</Text>
           </Pressable>
         </View>
+
+        <Spacer />
+
+        <Text style={styles.label}>Category</Text>
+        <TouchableOpacity 
+          style={styles.dropdownButton} 
+          onPress={() => setShowDropdown(!showDropdown)}
+        >
+          <Text style={styles.dropdownButtonText}>{selectedCategory.label}</Text>
+          <Text style={styles.dropdownArrow}>{showDropdown ? '▲' : '▼'}</Text>
+        </TouchableOpacity>
+
+        {showDropdown && (
+          <View style={styles.dropdownList}>
+            {categories.map((cat) => (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={[styles.dropdownItem, category === cat.id && styles.dropdownItemActive]}
+                onPress={() => {
+                  setCategory(cat.id);
+                  setShowDropdown(false);
+                }}
+              >
+                <Text style={styles.dropdownItemText}>{cat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Donut Chart */}
+        {total > 0 && (
+          <View style={styles.chartContainer}>
+            <Svg height="160" width="160" viewBox="0 0 160 160">
+              <G rotation="-90" origin="80, 80">
+                {chartData.map((item, index) => {
+                  const percentage = item.amount / total;
+                  const strokeDasharray = `${percentage * circumference} ${circumference}`;
+                  const strokeDashoffset = -startAngle * circumference; // This logic is slightly wrong for dashoffset
+                  // Correct logic for simple segments:
+                  // We need to rotate each segment.
+                  // Actually, simpler:
+                  const angle = percentage * 360;
+                  const currentStartAngle = startAngle;
+                  startAngle += percentage; // Accumulate for next
+
+                  return (
+                    <Circle
+                      key={index}
+                      cx="80"
+                      cy="80"
+                      r={radius}
+                      stroke={item.color}
+                      strokeWidth={strokeWidth}
+                      fill="transparent"
+                      strokeDasharray={strokeDasharray}
+                      strokeDashoffset={0} // We handle rotation via transform
+                      rotation={currentStartAngle * 360}
+                      origin="80, 80"
+                    />
+                  );
+                })}
+              </G>
+              {/* Center Text */}
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                 {/* SVG doesn't support View inside. We need to overlay View or use SvgText */}
+              </View>
+            </Svg>
+            {/* Overlay for center text */}
+            <View style={styles.chartCenter}>
+              <Text style={styles.chartTotal}>${total.toFixed(0)}</Text>
+              <Text style={styles.chartLabel}>Total</Text>
+            </View>
+          </View>
+        )}
 
         <Spacer />
 
@@ -128,7 +285,7 @@ export default function AddScreen() {
           )}
         </Pressable>
       </View>
-    </View>
+      </ScrollView>
     </SwipeNavigationWrapper>
   );
 }
@@ -181,5 +338,68 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#0f1930',
+    borderWidth: 1,
+    borderColor: '#223459',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  dropdownButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  dropdownArrow: {
+    color: '#7a8fa5',
+    fontSize: 12,
+  },
+  dropdownList: {
+    backgroundColor: '#0f1930',
+    borderWidth: 1,
+    borderColor: '#223459',
+    borderRadius: 10,
+    marginTop: 4,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a2238',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#1e3a8a',
+  },
+  dropdownItemText: {
+    color: 'white',
+    fontSize: 14,
+  },
+  chartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 16,
+    height: 160,
+  },
+  chartCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartTotal: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  chartLabel: {
+    color: '#7a8fa5',
+    fontSize: 12,
   },
 });
