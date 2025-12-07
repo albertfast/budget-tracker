@@ -49,6 +49,7 @@ smartbudget/
 2. **Setup mobile app**
    ```bash
    cd mobile
+   npm i @supabase/supabase-js expo-auth-session react-native-url-polyfill react-native-get-random-values
    npm install expo
    npx expo start
    ```
