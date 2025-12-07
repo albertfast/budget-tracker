@@ -244,11 +244,11 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.contentContainer}>
         {selectedView === 'overview' && renderOverview()}
         {selectedView === 'recommendations' && renderRecommendations()}
         {selectedView === 'savings' && renderSavingsOptimization()}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '600',
   },
-  scrollContainer: {
-    maxHeight: 400,
+  contentContainer: {
+    // Removed fixed height to allow full expansion
   },
   sectionContainer: {
     flex: 1,
