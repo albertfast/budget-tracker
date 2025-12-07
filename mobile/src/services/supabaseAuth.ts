@@ -1,7 +1,30 @@
 import * as AuthSession from 'expo-auth-session';
-import * as Linking from 'expo-linking';
-import { supabase } from './supabaseClient';
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import { supabase, storage, supabaseUrl } from './supabaseClient';
 import { makeRedirectUri } from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const redirectTo = (() => {
+  if (Platform.OS === 'web') {
+    return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081';
+  }
+  
+  // For mobile (Expo Go), we let makeRedirectUri detect the correct scheme (exp://)
+  // We set preferLocalhost to false to ensure we get the LAN IP, which is required for physical devices.
+  const uri = makeRedirectUri({
+    path: 'auth/callback',
+    preferLocalhost: false,
+  });
+
+  return uri;
+})();
+
+console.log('---------------------------------------------------');
+console.log('⚠️  Supabase Redirect URL:', redirectTo);
+console.log('---------------------------------------------------');
 
 export async function signInWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -24,12 +47,45 @@ export async function signUpWithEmail(email: string, password: string, username?
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.warn('Sign out error (ignored):', error);
+  } catch (e) {
+    console.warn('Sign out exception (ignored):', e);
+  }
+  
+  // Force local cleanup. If the token was invalid (403), signOut might fail 
+  // to clear local storage, leaving the user in a "logged in" state locally.
+  try {
+    if (supabaseUrl && storage) {
+      // Extract project ref from URL (e.g., https://xyz.supabase.co -> xyz)
+      // Handle both https://xyz.supabase.co and xyz.supabase.co
+      const tempUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}`;
+      const hostname = new URL(tempUrl).hostname;
+      const projectRef = hostname.split('.')[0];
+      const storageKey = `sb-${projectRef}-auth-token`;
+      
+      await storage.removeItem(storageKey);
+    }
+  } catch (cleanupError) {
+    console.warn('Failed to manually clear session storage:', cleanupError);
+  }
 }
 
 export async function signInWithGoogle() {
-  const redirectTo = makeRedirectUri({ scheme: 'smartbudget' });
+  if (Platform.OS === 'web') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+        queryParams: {
+          prompt: 'select_account',
+        },
+      },
+    });
+    if (error) throw error;
+    return null; // Web redirects, so no session returned immediately
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -48,17 +104,51 @@ export async function signInWithGoogle() {
   const authUrl = data?.url;
   if (!authUrl) throw new Error('Failed to get OAuth URL');
 
-  const result = await (AuthSession as any).startAsync({ authUrl });
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo);
   if (result.type !== 'success') throw new Error('Google sign-in cancelled');
 
-  // Exchange code for session
-  const url = result.url as string;
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-  if (exchangeError) throw exchangeError;
+  // Parse the result URL to handle both Implicit (access_token) and PKCE (code) flows
+  const url = result.url;
+  const params: Record<string, string> = {};
+  
+  // Extract params from both query (?) and hash (#)
+  const queryString = url.split('?')[1];
+  const hashString = url.split('#')[1];
 
-  // Return current session
-  const { data: sessionData } = await supabase.auth.getSession();
-  return sessionData.session;
+  if (queryString) {
+    queryString.split('&').forEach(param => {
+      const [key, value] = param.split('=');
+      params[key] = decodeURIComponent(value);
+    });
+  }
+  if (hashString) {
+    hashString.split('&').forEach(param => {
+      const [key, value] = param.split('=');
+      params[key] = decodeURIComponent(value);
+    });
+  }
+
+  if (params.error) throw new Error(params.error_description || params.error);
+
+  // Case 1: Implicit Grant (access_token returned directly)
+  if (params.access_token && params.refresh_token) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token: params.access_token,
+      refresh_token: params.refresh_token,
+    });
+    if (sessionError) throw sessionError;
+    return sessionData.session;
+  }
+
+  // Case 2: PKCE (code returned)
+  if (params.code) {
+    const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(params.code);
+    if (exchangeError) throw exchangeError;
+    return sessionData.session;
+  }
+
+  // Fallback: If we can't find tokens or code, throw error
+  throw new Error('No session data found in redirect URL');
 }
 
 export async function resolveEmailFromIdentifier(identifier: string): Promise<string> {

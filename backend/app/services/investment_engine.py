@@ -489,53 +489,7 @@ class AdvancedInvestmentRecommendationEngine:
     # Additional helper methods would be implemented here...
     # (Include all other methods from the original investment_engine.py)
 
-# Initialize enhanced investment recommendation engine
-investment_engine = AdvancedInvestmentRecommendationEngine()
-    """Engine for analyzing spending and providing investment recommendations"""
-    
-    def __init__(self):
-        self.investment_products = self._load_investment_products()
-        self.savings_thresholds = self._load_savings_thresholds()
-    
-    def analyze_financial_profile(
-        self, 
-        db: Session, 
-        user_id: str, 
-        analysis_days: int = 90
-    ) -> Dict[str, Any]:
-        """Analyze user's financial profile for investment recommendations"""
-        
-        # Get comprehensive spending analysis
-        spending_analysis = transaction_processor.get_spending_analysis(
-            db, user_id, analysis_days
-        )
-        
-        # Get recurring transactions (subscriptions, etc.)
-        recurring_analysis = transaction_processor.detect_recurring_transactions(
-            db, user_id, analysis_days
-        )
-        
-        # Calculate income vs expenses
-        income_expense_analysis = self._analyze_income_expenses(db, user_id, analysis_days)
-        
-        # Assess savings potential
-        savings_potential = self._calculate_savings_potential(
-            spending_analysis, recurring_analysis, income_expense_analysis
-        )
-        
-        # Generate risk profile
-        risk_profile = self._assess_risk_profile(spending_analysis, income_expense_analysis)
-        
-        return {
-            "user_id": user_id,
-            "analysis_period_days": analysis_days,
-            "spending_analysis": spending_analysis,
-            "recurring_transactions": recurring_analysis,
-            "income_expense_analysis": income_expense_analysis,
-            "savings_potential": savings_potential,
-            "risk_profile": risk_profile,
-            "generated_at": datetime.utcnow()
-        }
+
     
     def generate_investment_recommendations(
         self, 
@@ -952,4 +906,4 @@ investment_engine = AdvancedInvestmentRecommendationEngine()
         }
 
 # Initialize investment recommendation engine
-investment_engine = InvestmentRecommendationEngine()
+investment_engine = AdvancedInvestmentRecommendationEngine()

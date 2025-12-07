@@ -7,11 +7,14 @@ import {
   Pressable,
   Platform,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { AndroidNativeProps, DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Svg, { Rect } from 'react-native-svg';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/services/supabaseClient';
 
 const CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Fun', 'Other'];
 const STORAGE_KEY = 'smartbudget:transactions:v1';
@@ -32,6 +35,7 @@ function formatISO(d: Date) {
 }
 
 export default function TransactionsScreen() {
+  const { user } = useAuth();
   const [amount, setAmount] = React.useState('');
   const [desc, setDesc] = React.useState('');
   const [category, setCategory] = React.useState<string>('Food');
@@ -39,46 +43,141 @@ export default function TransactionsScreen() {
   const [showPicker, setShowPicker] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [items, setItems] = React.useState<Entry[]>([]);
+  const [loading, setLoading] = React.useState(false);
 
-  // Load persisted transactions
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Entry[];
-          setItems(parsed);
-        }
-      } catch (e) {
-        // ignore
+  // Fetch transactions from Supabase
+  const fetchTransactions = React.useCallback(async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      // 1. Get user's bank accounts
+      const { data: accounts, error: accError } = await supabase
+        .from('bank_accounts')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (accError) throw accError;
+      
+      if (!accounts || accounts.length === 0) {
+        setItems([]);
+        return;
       }
-    })();
-  }, []);
 
-  // Persist on changes
+      const accountIds = accounts.map(a => a.id);
+
+      // 2. Get transactions
+      const { data: txs, error: txError } = await supabase
+        .from('transactions')
+        .select('*')
+        .in('bank_account_id', accountIds)
+        .order('date', { ascending: false });
+
+      if (txError) throw txError;
+
+      if (txs) {
+        setItems(txs.map(t => ({
+          id: t.id,
+          amount: t.amount,
+          category: t.category_primary || 'Other',
+          desc: t.description,
+          date: t.date ? t.date.split('T')[0] : formatISO(new Date()),
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   React.useEffect(() => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch(() => {});
-  }, [items]);
+    fetchTransactions();
+  }, [fetchTransactions]);
 
-  const onAddOrSave = () => {
+  const onAddOrSave = async () => {
+    if (!user) return;
     const value = parseFloat(amount);
     if (Number.isNaN(value) || value <= 0) return;
-    const entry: Entry = {
-      id: editingId ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      amount: value,
-      category,
-      desc: desc?.trim() || undefined,
-      date: formatISO(date),
-    };
-    setItems((prev) => {
-      if (!editingId) return [...prev, entry];
-      return prev.map((it) => (it.id === editingId ? entry : it));
-    });
-    setAmount('');
-    setDesc('');
-    setCategory('Food');
-    setDate(new Date());
-    setEditingId(null);
+
+    try {
+      setLoading(true);
+      
+      // 1. Ensure "Manual" account exists
+      let accountId: string | null = null;
+      
+      const { data: accounts } = await supabase
+        .from('bank_accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('account_type', 'cash')
+        .eq('bank_name', 'Manual')
+        .limit(1);
+
+      if (accounts && accounts.length > 0) {
+        accountId = accounts[0].id;
+      } else {
+        // Create manual account
+        const { data: newAccount, error: createError } = await supabase
+          .from('bank_accounts')
+          .insert({
+            user_id: user.id,
+            account_name: 'Cash Wallet',
+            bank_name: 'Manual',
+            account_type: 'cash',
+            is_active: true
+          })
+          .select()
+          .single();
+          
+        if (createError) throw createError;
+        accountId = newAccount.id;
+      }
+
+      if (!accountId) throw new Error('Failed to get account ID');
+
+      // Use local date string + noon UTC to prevent timezone shifts
+      const dateStr = formatISO(date);
+      const isoDate = `${dateStr}T12:00:00Z`;
+
+      const txData = {
+        bank_account_id: accountId,
+        amount: value,
+        description: desc?.trim() || 'Manual Entry',
+        category_primary: category,
+        date: isoDate,
+        is_manual: true,
+        is_pending: false
+      };
+
+      if (editingId) {
+        // Update
+        const { error } = await supabase
+          .from('transactions')
+          .update(txData)
+          .eq('id', editingId);
+        if (error) throw error;
+      } else {
+        // Insert
+        const { error } = await supabase
+          .from('transactions')
+          .insert(txData);
+        if (error) throw error;
+      }
+
+      setAmount('');
+      setDesc('');
+      setCategory('Food');
+      setDate(new Date());
+      setEditingId(null);
+      
+      await fetchTransactions();
+
+    } catch (err) {
+      console.error('Error saving transaction:', err);
+      alert('Failed to save transaction');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startEdit = (it: Entry) => {
@@ -89,9 +188,20 @@ export default function TransactionsScreen() {
     setDate(new Date(it.date));
   };
 
-  const onDelete = (id: string) => {
-    setItems((prev) => prev.filter((it) => it.id !== id));
-    if (editingId === id) setEditingId(null);
+  const onDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setItems((prev) => prev.filter((it) => it.id !== id));
+      if (editingId === id) setEditingId(null);
+    } catch (err) {
+      console.error('Error deleting transaction:', err);
+    }
   };
 
   const totals = React.useMemo(() => {
@@ -104,10 +214,10 @@ export default function TransactionsScreen() {
   const maxVal = Math.max(1, ...Object.values(totals));
 
   return (
-    <SwipeNavigationWrapper currentTab="Transactions">
-      <View style={styles.screen}>
-        <Text style={styles.sectionHeader}>Transaction Management</Text>
-        <Text style={styles.sectionDescription}>Add, edit, and track your financial transactions</Text>
+    <SwipeNavigationWrapper currentTab="Transactions" scrollable={false}>
+      <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 100 }}>
+        <Text style={styles.sectionHeader}>Transactions</Text>
+        <Text style={styles.sectionDescription}>Manage your expenses and income</Text>
       
       <View style={styles.card}>
         <View style={{ gap: 10 }}>
@@ -183,33 +293,33 @@ export default function TransactionsScreen() {
         <View style={styles.hr} />
 
         <Text style={styles.subTitle}>Recent</Text>
-        <FlatList
-          data={[...items].reverse()}
-          keyExtractor={(it) => it.id}
-          style={{ maxHeight: 240 }}
-          contentContainerStyle={{ paddingVertical: 8 }}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          renderItem={({ item }) => (
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: 'white', fontWeight: '700' }}>
-                  {item.category} • {item.amount.toFixed(2)}
-                </Text>
-                <Text style={{ color: '#9bb4da' }}>
-                  {item.date}{item.desc ? ` • ${item.desc}` : ''}
-                </Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Pressable onPress={() => startEdit(item)} style={[styles.smallBtn, { backgroundColor: '#1e40af' }]}>
-                  <Text style={styles.smallBtnText}>Edit</Text>
-                </Pressable>
-                <Pressable onPress={() => onDelete(item.id)} style={[styles.smallBtn, { backgroundColor: '#ef4444' }]}>
-                  <Text style={styles.smallBtnText}>Del</Text>
-                </Pressable>
+        <View style={{ paddingVertical: 8 }}>
+          {[...items].reverse().map((item) => (
+            <View key={item.id} style={{ marginBottom: 12 }}>
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: 'white', fontWeight: '700' }}>
+                    {item.category} • {item.amount.toFixed(2)}
+                  </Text>
+                  <Text style={{ color: '#9bb4da' }}>
+                    {item.date}{item.desc ? ` • ${item.desc}` : ''}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Pressable onPress={() => startEdit(item)} style={[styles.smallBtn, { backgroundColor: '#1e40af' }]}>
+                    <Text style={styles.smallBtnText}>Edit</Text>
+                  </Pressable>
+                  <Pressable onPress={() => onDelete(item.id)} style={[styles.smallBtn, { backgroundColor: '#ef4444' }]}>
+                    <Text style={styles.smallBtnText}>Del</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
+          ))}
+          {items.length === 0 && (
+            <Text style={{ color: '#7a8fa5', textAlign: 'center', fontStyle: 'italic' }}>No transactions yet</Text>
           )}
-        />
+        </View>
 
         <View style={styles.hr} />
 
@@ -238,7 +348,7 @@ export default function TransactionsScreen() {
           </View>
         </View>
       </View>
-    </View>
+      </ScrollView>
     </SwipeNavigationWrapper>
   );
 }
@@ -247,7 +357,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
   subTitle: { color: 'white', fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
-  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
+  card: { backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
   label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600' },
   input: {
     height: 48,

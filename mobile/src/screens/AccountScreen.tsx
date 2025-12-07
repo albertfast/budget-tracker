@@ -7,25 +7,77 @@ import {
   Pressable,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOut as supaSignOut } from '@/services/supabaseAuth';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AccountScreen() {
+  const { user, loading, refreshSession } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [mode, setMode] = React.useState<'login' | 'signup'>('login');
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const onLogin = () => {
-    if (!email.trim() || !password) {
-      Alert.alert('Missing info', 'Please enter email and password.');
-      return;
+  const onLogin = async () => {
+    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    try {
+      setSubmitting(true);
+      await signInWithEmail(email.trim(), password);
+      await refreshSession();
+      Alert.alert('Success', 'Signed in');
+    } catch (err: any) {
+      Alert.alert('Login failed', err?.message ?? 'Please try again');
+    } finally {
+      setSubmitting(false);
     }
-    // TODO: connect to backend auth
-    Alert.alert('Login', `Email: ${email}`);
   };
 
-  const onForgot = () => Alert.alert('Forgot password', 'Password reset flow TBD');
-  const onCreate = () => Alert.alert('Create account', 'Account creation flow TBD');
-  const onGoogle = () => Alert.alert('Google Sign-In', 'Google auth flow TBD');
+  const onCreate = async () => {
+    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    try {
+      setSubmitting(true);
+      await signUpWithEmail(email.trim(), password, username.trim() || undefined);
+      await refreshSession();
+      Alert.alert('Success', 'Account created, check email if confirmation is required.');
+    } catch (err: any) {
+      Alert.alert('Signup failed', err?.message ?? 'Please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    try {
+      setSubmitting(true);
+      await signInWithGoogle();
+      await refreshSession();
+      Alert.alert('Success', 'Signed in with Google');
+    } catch (err: any) {
+      Alert.alert('Google Sign-In failed', err?.message ?? 'Please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onForgot = () => Alert.alert('Forgot password', 'Password reset flow TBD in Supabase auth settings');
+  const onLogout = async () => {
+    try {
+      setSubmitting(true);
+      await supaSignOut();
+      await refreshSession();
+    } catch (err: any) {
+      Alert.alert('Sign out failed', err?.message ?? 'Please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const isAuthed = !!user;
+  const primaryAction = mode === 'login' ? onLogin : onCreate;
+  const primaryLabel = mode === 'login' ? 'Log in' : 'Create account';
 
   return (
     <SwipeNavigationWrapper currentTab="Account">
@@ -40,51 +92,84 @@ export default function AccountScreen() {
             style={styles.avatar}
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Welcome</Text>
-            <Text style={styles.cardSubtitle}>Sign in to sync your data</Text>
+            <Text style={styles.cardTitle}>{isAuthed ? 'Signed in' : 'Welcome'}</Text>
+            <Text style={styles.cardSubtitle}>
+              {isAuthed ? user?.email : 'Sign in to sync your data'}
+            </Text>
           </View>
         </View>
 
-        <View style={{ gap: 10 }}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
-            placeholderTextColor="#7a8fb2"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-          />
+        {loading ? (
+          <ActivityIndicator color="#3b82f6" />
+        ) : isAuthed ? (
+          <View style={{ gap: 10 }}>
+            <Text style={styles.label}>You are signed in.</Text>
+            <Pressable onPress={onLogout} style={[styles.button, { marginTop: 4 }]}>
+              <Text style={styles.buttonText}>Sign out</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={{ gap: 10 }}>
+            {mode === 'signup' && (
+              <>
+                <Text style={styles.label}>Username (optional)</Text>
+                <TextInput
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="username"
+                  placeholderTextColor="#7a8fb2"
+                  autoCapitalize="none"
+                  style={styles.input}
+                />
+              </>
+            )}
 
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            placeholderTextColor="#7a8fb2"
-            secureTextEntry
-            style={styles.input}
-          />
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              placeholderTextColor="#7a8fb2"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+            />
 
-          <Pressable onPress={onForgot} style={styles.linkBtn}>
-            <Text style={styles.linkText}>Forgot password?</Text>
-          </Pressable>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor="#7a8fb2"
+              secureTextEntry
+              style={styles.input}
+            />
 
-          <Pressable onPress={onLogin} style={[styles.button, { marginTop: 4 }]}>
-            <Text style={styles.buttonText}>Log in</Text>
-          </Pressable>
+            <Pressable onPress={onForgot} style={styles.linkBtn}>
+              <Text style={styles.linkText}>Forgot password?</Text>
+            </Pressable>
 
-          <View style={styles.hr} />
+            <Pressable
+              onPress={primaryAction}
+              style={[styles.button, submitting && styles.disabledButton]}
+              disabled={submitting}
+            >
+              {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{primaryLabel}</Text>}
+            </Pressable>
 
-          <Pressable onPress={onGoogle} style={[styles.button, styles.googleBtn]}>
-            <Text style={styles.buttonText}>Continue with Google</Text>
-          </Pressable>
+            <View style={styles.hr} />
 
-          <Pressable onPress={onCreate} style={styles.linkBtn}>
-            <Text style={styles.linkText}>Create an account</Text>
-          </Pressable>
-        </View>
+            <Pressable onPress={onGoogle} style={[styles.button, styles.googleBtn]} disabled={submitting}>
+              {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue with Google</Text>}
+            </Pressable>
+
+            <Pressable onPress={() => setMode(mode === 'login' ? 'signup' : 'login')} style={styles.linkBtn}>
+              <Text style={styles.linkText}>
+                {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Log in'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
     </SwipeNavigationWrapper>
@@ -119,6 +204,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   googleBtn: { backgroundColor: '#ea4335' },
+  disabledButton: { opacity: 0.6 },
   buttonText: { color: 'white', fontWeight: '700' },
   linkBtn: { alignSelf: 'flex-end', paddingVertical: 8, paddingHorizontal: 4 },
   linkText: { color: '#7da0d6', fontWeight: '600' },

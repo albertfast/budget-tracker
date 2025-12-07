@@ -27,7 +27,7 @@ export default function HomeScreen() {
 
   return (
    <SafeAreaView style={{ flex: 1, backgroundColor: '#0b1220' }}>
-      <SwipeNavigationWrapper currentTab="Home">
+      <SwipeNavigationWrapper currentTab="Home" scrollable={false}>
         <ScrollView
           style={styles.screen}
           showsVerticalScrollIndicator={false}

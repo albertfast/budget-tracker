@@ -185,46 +185,48 @@ export default function ConnectAccountScreen() {
 
   if (connectionStatus === 'connected') {
     return (
-      <ScrollView style={styles.screen}>
-        <Text style={styles.title}>Connect Account</Text>
-        
-        <View style={styles.successCard}>
-          <Text style={styles.successIcon}>✅</Text>
-          <Text style={styles.successTitle}>Bank Connected!</Text>
-          <Text style={styles.successMessage}>
-            Your {bankProviders.find(p => p.id === selectedProvider)?.name} account is now connected.
-            Transactions will sync automatically.
-          </Text>
+      <SwipeNavigationWrapper currentTab="Connect Account" scrollable={false}>
+        <ScrollView style={styles.screen}>
+          <Text style={styles.title}>Connect Account</Text>
           
-          <View style={styles.connectionInfo}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Status:</Text>
-              <Text style={styles.infoValue}>Active</Text>
+          <View style={styles.successCard}>
+            <Text style={styles.successIcon}>✅</Text>
+            <Text style={styles.successTitle}>Bank Connected!</Text>
+            <Text style={styles.successMessage}>
+              Your {bankProviders.find(p => p.id === selectedProvider)?.name} account is now connected.
+              Transactions will sync automatically.
+            </Text>
+            
+            <View style={styles.connectionInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Status:</Text>
+                <Text style={styles.infoValue}>Active</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Auto Sync:</Text>
+                <Text style={styles.infoValue}>{enableAutoSync ? 'Enabled' : 'Disabled'}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Sync Frequency:</Text>
+                <Text style={styles.infoValue}>{syncFrequency}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Last Sync:</Text>
+                <Text style={styles.infoValue}>Just now</Text>
+              </View>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Auto Sync:</Text>
-              <Text style={styles.infoValue}>{enableAutoSync ? 'Enabled' : 'Disabled'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Sync Frequency:</Text>
-              <Text style={styles.infoValue}>{syncFrequency}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Last Sync:</Text>
-              <Text style={styles.infoValue}>Just now</Text>
-            </View>
-          </View>
 
-          <Pressable style={styles.disconnectButton} onPress={handleDisconnect}>
-            <Text style={styles.disconnectButtonText}>Disconnect Bank</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+            <Pressable style={styles.disconnectButton} onPress={handleDisconnect}>
+              <Text style={styles.disconnectButtonText}>Disconnect Bank</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SwipeNavigationWrapper>
     );
   }
 
   return (
-    <SwipeNavigationWrapper currentTab="Connect Account">
+    <SwipeNavigationWrapper currentTab="Connect Account" scrollable={false}>
       <ScrollView style={styles.screen}>
         <Text style={styles.sectionHeader}>Bank Integration</Text>
         <Text style={styles.sectionDescription}>Connect your bank accounts for automatic transaction sync</Text>

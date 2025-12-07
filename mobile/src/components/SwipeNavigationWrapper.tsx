@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Dimensions } from 'react-native';
-import { PanGestureHandler, State, TapGestureHandler, LongPressGestureHandler } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, Pressable, Platform, Dimensions } from 'react-native';
+import { PanGestureHandler, State, TapGestureHandler, LongPressGestureHandler, ScrollView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import HamburgerMenu from './HamburgerMenu';
 
@@ -9,13 +9,15 @@ interface SwipeNavigationWrapperProps {
   currentTab: string;
   showIndicator?: boolean;
   showArrows?: boolean;
+  scrollable?: boolean;
 }
 
 export default function SwipeNavigationWrapper({ 
   children, 
   currentTab, 
   showIndicator = true,
-  showArrows = true 
+  showArrows = true,
+  scrollable = true
 }: SwipeNavigationWrapperProps) {
   const navigation = useNavigation();
 
@@ -392,15 +394,21 @@ export default function SwipeNavigationWrapper({
                 </>
               )}
               
-              <ScrollView 
-                style={styles.scrollContent}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContainer}
-              >
-                {children}
-              </ScrollView>
+              {scrollable ? (
+                <ScrollView 
+                  style={styles.scrollContent}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.scrollContainer}
+                >
+                  {children}
+                </ScrollView>
+              ) : (
+                <View style={[styles.scrollContent, { paddingHorizontal: 0 }]}>
+                  {children}
+                </View>
+              )}
               
               {/* Long Swipe Indicator */}
               {longSwipeIndicator && (

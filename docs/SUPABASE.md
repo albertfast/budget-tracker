@@ -20,8 +20,9 @@ Edit `mobile/app.json` and set:
   "expo": {
     "scheme": "smartbudget",
     "extra": {
-      "SUPABASE_URL": "https://YOUR-PROJECT-REF.supabase.co",
-      "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY"
+      "SUPABASE_URL": "https://ojcvjsxmshdvyxryunvk.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qY3Zqc3htc2hkdnl4cnl1bnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE3MDMsImV4cCI6MjA3NDQ1NzcwM30.sUPQRXSO9i4kAwUhAo6rSLXdusV-3VbphKlqUdxDdfM
+"
     }
   }
 }

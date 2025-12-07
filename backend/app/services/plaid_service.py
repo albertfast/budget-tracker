@@ -1,3 +1,4 @@
+import plaid
 from plaid.api import plaid_api
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.accounts_get_request import AccountsGetRequest
@@ -19,8 +20,10 @@ class PlaidService:
     """Service class for Plaid API integration"""
     
     def __init__(self):
+        # Normalize env string to match Plaid client's enum
+        env_value = getattr(plaid.Environment, settings.PLAID_ENV.capitalize(), plaid.Environment.Sandbox)
         self.configuration = Configuration(
-            host=getattr(plaid.Environment, settings.PLAID_ENV, plaid.Environment.sandbox),
+            host=env_value,
             api_key={
                 'clientId': settings.PLAID_CLIENT_ID,
                 'secret': settings.PLAID_SECRET,
