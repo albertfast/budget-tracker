@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
+import { INCOME_CATEGORY_IDS } from '@/constants/categories';
 
 interface InvestmentAnalysisProps {
   transactions?: any[];
@@ -12,21 +13,72 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
 
   useEffect(() => {
     if (transactions.length > 0) {
-      const income = transactions.filter(t => t.category === 'Income').reduce((sum, t) => sum + Number(t.amount), 0);
-      const expenses = transactions.filter(t => t.category !== 'Income').reduce((sum, t) => sum + Number(t.amount), 0);
+      const income = transactions
+        .filter(t => INCOME_CATEGORY_IDS.includes(t.category) || t.category === 'Income')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+      const expenses = transactions
+        .filter(t => !INCOME_CATEGORY_IDS.includes(t.category) && t.category !== 'Income')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
       
       const savings = Math.max(0, income - expenses);
       const savingsRate = income > 0 ? savings / income : 0;
       const expenseRatio = income > 0 ? expenses / income : 0;
       
-      // Simple logic to determine risk level based on savings rate
+      // Determine risk level based on savings rate
       let riskLevel: 'low' | 'moderate' | 'high' = 'moderate';
       if (savingsRate > 0.5) riskLevel = 'low';
-      else if (savingsRate > 0.3) riskLevel = 'low';
+      else if (savingsRate > 0.3) riskLevel = 'moderate';
       else if (savingsRate < 0.1) riskLevel = 'high';
+
+      // Generate dynamic recommendations
+      const newRecommendations: InvestmentRecommendation[] = [];
+      
+      if (savingsRate < 0.2) {
+        newRecommendations.push({
+          id: 'rec_1',
+          title: 'Increase Savings Rate',
+          description: 'Your savings rate is below 20%. Try to reduce discretionary spending.',
+          type: 'savings',
+          priority: 'high',
+          potential_impact: income * 0.05
+        });
+      }
+      
+      if (expenseRatio > 0.8) {
+        newRecommendations.push({
+          id: 'rec_2',
+          title: 'High Expense Ratio',
+          description: 'Expenses are consuming over 80% of income. Review recurring bills.',
+          type: 'allocation',
+          priority: 'high',
+          potential_impact: expenses * 0.1
+        });
+      }
+
+      if (savings > 1000) {
+        newRecommendations.push({
+          id: 'rec_3',
+          title: 'Investment Opportunity',
+          description: 'You have a healthy surplus. Consider diversifying into index funds.',
+          type: 'investment',
+          priority: 'medium',
+          potential_impact: savings * 0.07 // 7% return assumption
+        });
+      } else {
+         newRecommendations.push({
+          id: 'rec_4',
+          title: 'Build Emergency Fund',
+          description: 'Focus on building a 3-6 month emergency fund before aggressive investing.',
+          type: 'savings',
+          priority: 'high',
+          potential_impact: 0
+        });
+      }
 
       setData({
         ...data,
+        recommendations: newRecommendations.length > 0 ? newRecommendations : data.recommendations,
         riskProfile: {
           ...data.riskProfile,
           risk_level: riskLevel,
@@ -113,7 +165,7 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionTitle}>🎯 Investment Recommendations</Text>
       {recommendations.map((rec, index) => (
-        <View key={index} style={styles.recommendationCard}>
+        <View key={rec.id || index} style={styles.recommendationCard}>
           <View style={styles.recommendationHeader}>
             <Text style={styles.recommendationTitle}>{rec.title}</Text>
             <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(rec.priority) }]}>

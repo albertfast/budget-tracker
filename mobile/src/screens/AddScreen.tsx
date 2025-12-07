@@ -6,25 +6,7 @@ import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import Spacer from '@/components/Spacer';
 import { insertFinancialRecord } from '@/services/financialDataService';
 import { supabase } from '@/services/supabaseClient';
-
-const EXPENSE_CATEGORIES = [
-  { id: 'Food', label: '🍔 Food', color: '#ef4444' },
-  { id: 'Transport', label: '🚗 Transport', color: '#f97316' },
-  { id: 'Housing', label: '🏠 Housing', color: '#eab308' },
-  { id: 'Bills', label: '💡 Bills', color: '#22c55e' },
-  { id: 'Entertainment', label: '🎉 Fun', color: '#3b82f6' },
-  { id: 'Shopping', label: '🛍️ Shopping', color: '#8b5cf6' },
-  { id: 'Health', label: '🏥 Health', color: '#ec4899' },
-  { id: 'Other', label: '📦 Other', color: '#6b7280' },
-];
-
-const INCOME_CATEGORIES = [
-  { id: 'Salary', label: '💰 Salary', color: '#22c55e' },
-  { id: 'Freelance', label: '💻 Freelance', color: '#3b82f6' },
-  { id: 'Investment', label: '📈 Investment', color: '#8b5cf6' },
-  { id: 'Gift', label: '🎁 Gift', color: '#ec4899' },
-  { id: 'Other', label: '📦 Other', color: '#6b7280' },
-];
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/constants/categories';
 
 export default function AddScreen() {
   const [amount, setAmount] = React.useState('');
@@ -47,14 +29,6 @@ export default function AddScreen() {
   );
 
   const fetchChartData = async () => {
-    const { data } = await supabase
-      .from('financial_records')
-      .select('category, amount')
-      .eq('category', type === 'expense' ? 'Expense' : 'Income'); // This logic is flawed if we start saving real categories
-      // But wait, previously we saved 'Expense'/'Income' as category. 
-      // Now we want to save REAL categories.
-      // So we should fetch ALL records and filter by our known categories.
-    
     const { data: allData } = await supabase
       .from('financial_records')
       .select('category, amount');
@@ -71,9 +45,8 @@ export default function AddScreen() {
       // Group by category
       const grouped = new Map<string, number>();
       relevantData.forEach(d => {
-        // Map legacy 'Expense'/'Income' to 'Other' or keep as is?
-        // Let's map to 'Other' for the chart if it's not in our list
         let cat = d.category;
+        // Map legacy 'Expense'/'Income' to 'Other' if needed, or keep as is
         if (cat === 'Expense' || cat === 'Income') cat = 'Other';
         
         const current = grouped.get(cat) || 0;

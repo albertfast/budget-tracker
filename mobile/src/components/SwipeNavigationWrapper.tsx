@@ -72,8 +72,11 @@ export default function SwipeNavigationWrapper({
 
   const navigateToTab = (tabName: string) => {
     if (tabName !== currentTab) {
-      setPreviousTab(currentTab);
-      navigation.navigate(tabName as never);
+      // Wrap navigation in setTimeout to avoid "Cannot update a component while rendering" error
+      setTimeout(() => {
+        setPreviousTab(currentTab);
+        navigation.navigate(tabName as never);
+      }, 0);
     }
   };
 

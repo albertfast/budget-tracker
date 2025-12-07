@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
+import { INCOME_CATEGORY_IDS } from '@/constants/categories';
 
 interface Transaction {
   id: string;
@@ -15,8 +16,8 @@ interface FinancialSummaryProps {
 }
 
 export default function FinancialSummary({ transactions = [] }: FinancialSummaryProps) {
-  const incomeTransactions = transactions.filter(t => t.category === 'Income');
-  const expenseTransactions = transactions.filter(t => t.category !== 'Income');
+  const incomeTransactions = transactions.filter(t => INCOME_CATEGORY_IDS.includes(t.category) || t.category === 'Income');
+  const expenseTransactions = transactions.filter(t => !INCOME_CATEGORY_IDS.includes(t.category) && t.category !== 'Income');
 
   const monthlyIncome = incomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);

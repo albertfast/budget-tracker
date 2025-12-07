@@ -2,12 +2,14 @@
 const API_BASE_URL = 'http://localhost:8000/api'; // Update with your backend URL
 
 export interface InvestmentRecommendation {
+  id?: string;
   type: string;
   priority: 'high' | 'medium' | 'low';
   title: string;
   description: string;
   recommended_allocation?: number;
   potential_savings?: number;
+  potential_impact?: number;
   expected_return?: number;
   risk_level?: string;
   action_items?: string[];
