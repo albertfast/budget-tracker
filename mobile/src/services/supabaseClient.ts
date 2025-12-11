@@ -16,6 +16,8 @@ const supabaseAnonKey =
 if (!supabaseUrl || !supabaseAnonKey) {
   // eslint-disable-next-line no-console
   console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.');
+} else {
+  console.log('[Supabase] Initialized with URL:', supabaseUrl);
 }
 
 // Try to use AsyncStorage if available; fall back to in-memory storage

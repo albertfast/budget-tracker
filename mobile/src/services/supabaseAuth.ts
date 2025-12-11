@@ -3,9 +3,12 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { supabase, storage, supabaseUrl } from './supabaseClient';
-import { makeRedirectUri } from 'expo-auth-session';
+
+const { makeRedirectUri } = AuthSession;
 
 WebBrowser.maybeCompleteAuthSession();
+// Warm up the browser to improve startup time
+void WebBrowser.warmUpAsync();
 
 const redirectTo = (() => {
   if (Platform.OS === 'web') {
@@ -19,6 +22,11 @@ const redirectTo = (() => {
     preferLocalhost: false,
   });
 
+  console.log('---------------------------------------------------');
+  console.log('⚠️  Supabase Redirect URL:', uri);
+  console.log('ACTION REQUIRED: Ensure this EXACT URL is in your Supabase Redirect URLs list!');
+  console.log('NOTE: If your Wi-Fi IP changes, you must update Supabase.');
+  console.log('---------------------------------------------------');
   return uri;
 })();
 
@@ -104,6 +112,7 @@ export async function signInWithGoogle() {
   const authUrl = data?.url;
   if (!authUrl) throw new Error('Failed to get OAuth URL');
 
+  console.log('[Auth] Opening Auth Session URL:', authUrl);
   const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo);
   if (result.type !== 'success') throw new Error('Google sign-in cancelled');
 
