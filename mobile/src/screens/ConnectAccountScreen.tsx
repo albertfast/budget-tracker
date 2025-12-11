@@ -47,9 +47,10 @@ export default function ConnectAccountScreen() {
     try {
       setConnectionStatus('connecting');
       
-      // Ensure user is authenticated (mock for demo)
+      // Ensure user is authenticated
       if (!authService.isAuthenticated()) {
-        authService.mockLogin();
+        console.log('User not authenticated, attempting auto-login...');
+        await authService.login();
       }
       
       // Exchange public token for access token using the correct endpoint
