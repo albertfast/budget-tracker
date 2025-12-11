@@ -83,7 +83,7 @@ export default function ConnectAccountScreen() {
   };
 
   if (connectionStatus === 'connected') {
-    // Extract bank name from selectedProvider (format: "plaid-institution_id")
+    // Use generic "your bank" since we don't store the actual bank name after connection
     const bankName = selectedProvider.startsWith('plaid-') 
       ? 'your bank' 
       : (selectedProvider || 'your bank');
