@@ -59,7 +59,7 @@ export async function signOut() {
   try {
     if (supabaseUrl && storage) {
       // Extract project ref from URL (e.g., https://xyz.supabase.co -> xyz)
-      // Handle both https://xyz.supabase.co and xyz.supabase.co
+      // Handle both https://ojcvjsxmshdvyxryunvk.supabase.co and xyz.supabase.co
       const tempUrl = supabaseUrl.startsWith('http') ? supabaseUrl : `https://${supabaseUrl}`;
       const hostname = new URL(tempUrl).hostname;
       const projectRef = hostname.split('.')[0];
