@@ -83,9 +83,10 @@ export default function ConnectAccountScreen() {
   };
 
   if (connectionStatus === 'connected') {
+    // Extract bank name from selectedProvider (format: "plaid-institution_id")
     const bankName = selectedProvider.startsWith('plaid-') 
       ? 'your bank' 
-      : selectedProvider;
+      : (selectedProvider || 'your bank');
     
     return (
       <SwipeNavigationWrapper currentTab="Connect Account" scrollable={false}>
