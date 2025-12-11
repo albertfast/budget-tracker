@@ -11,7 +11,6 @@ export default function HomeScreen() {
   const tabs = [
     { name: 'Home', icon: '🏠', description: 'Dashboard & Overview' },
     { name: 'Transactions', icon: '💳', description: 'View & Add Transactions' },
-    { name: 'Add', icon: '➕', description: 'Quick Entry Form' },
     { name: 'Connect Account', icon: '🏦', description: 'Link Bank Account' },
     { name: 'Account', icon: '👤', description: 'Profile & Settings' },
   ];
@@ -36,7 +35,7 @@ export default function HomeScreen() {
         
         <View style={styles.disclaimerContainer}>
           <Text style={styles.disclaimerText}>
-            Disclaimer: Investment recommendations are not provided by a CFP (Certified Financial Planner), licensed investment broker, or financial professional. They are generated using known risk assessment principles and algorithmic analysis. All investment decisions are made at the user's own risk.
+            Disclaimer: Investment recommendations are not provided by a CPO, licensed investment broker, or financial professional. They are generated using known risk assessment principles and algorithmic analysis. All investment decisions are made at the user's own risk.
           </Text>
         </View>
         

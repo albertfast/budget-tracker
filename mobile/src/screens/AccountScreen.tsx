@@ -8,9 +8,11 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 
 export default function AccountScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -36,7 +38,7 @@ export default function AccountScreen() {
       <View style={styles.card}>
         <View style={styles.avatarRow}>
           <Image
-            source={{ uri: 'https://avatars.githubusercontent.com/u/9919?s=80&v=4' }}
+            source={{ uri: 'https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&size=128' }}
             style={styles.avatar}
           />
           <View style={{ flex: 1 }}>
@@ -44,6 +46,13 @@ export default function AccountScreen() {
             <Text style={styles.cardSubtitle}>Sign in to sync your data</Text>
           </View>
         </View>
+
+        <Pressable 
+          onPress={() => navigation.navigate('Connect Account' as never)} 
+          style={[styles.button, { backgroundColor: '#10b981', marginBottom: 16 }]}
+        >
+          <Text style={styles.buttonText}>🏦 Connect Bank Account (Plaid)</Text>
+        </Pressable>
 
         <View style={{ gap: 10 }}>
           <Text style={styles.label}>Email</Text>

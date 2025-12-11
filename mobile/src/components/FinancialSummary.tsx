@@ -1,19 +1,104 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import Svg, { Rect, Text as SvgText } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+
+const STORAGE_KEY = 'smartbudget:transactions:v1';
+const STORAGE_KEY_PLAID = 'smartbudget:plaid_transactions';
+
+type Entry = {
+  id: string;
+  amount: number;
+  category: string;
+  desc?: string;
+  date: string;
+};
+
+type PlaidTransaction = {
+  transaction_id: string;
+  amount: number;
+  category: string[];
+  name: string;
+  date: string;
+};
 
 export default function FinancialSummary() {
-  // Sample data - in a real app, this would come from props or API
-  const monthlyIncome = 3500;
-  const expenseCategories = [
-    { name: 'Food', amount: 450, color: '#ef4444' },
-    { name: 'Housing', amount: 1200, color: '#f97316' },
-    { name: 'Transport', amount: 280, color: '#eab308' },
-    { name: 'Bills', amount: 320, color: '#22c55e' },
-    { name: 'Shopping', amount: 180, color: '#3b82f6' },
-    { name: 'Entertainment', amount: 150, color: '#8b5cf6' },
-    { name: 'Other', amount: 120, color: '#6b7280' },
-  ];
+  const isFocused = useIsFocused();
+  const [monthlyIncome, setMonthlyIncome] = useState(3500); // Default base income
+  const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [isFocused]);
+
+  const loadTransactions = async () => {
+    try {
+      const [manualRaw, plaidRaw] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(STORAGE_KEY_PLAID)
+      ]);
+
+      let allExpenses: { category: string; amount: number }[] = [];
+      let calculatedIncome = 3500; // Start with base
+
+      // Process Manual Transactions
+      if (manualRaw) {
+        const manualTransactions = JSON.parse(manualRaw) as Entry[];
+        manualTransactions.forEach(t => {
+          allExpenses.push({ category: t.category, amount: t.amount });
+        });
+      }
+
+      // Process Plaid Transactions
+      if (plaidRaw) {
+        const plaidTransactions = JSON.parse(plaidRaw) as PlaidTransaction[];
+        plaidTransactions.forEach(t => {
+          if (t.amount > 0) {
+            // Expense
+            const cat = (t.category && t.category.length > 0) ? t.category[0] : 'Other';
+            allExpenses.push({ category: cat, amount: t.amount });
+          } else if (t.amount < 0) {
+            // Income (Plaid sends negative for income)
+            calculatedIncome += Math.abs(t.amount);
+          }
+        });
+      }
+
+      setMonthlyIncome(calculatedIncome);
+        
+      // Group by category
+      const categoryMap: Record<string, number> = {};
+      allExpenses.forEach(t => {
+        categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+      });
+
+      // Define colors for categories
+      const colors: Record<string, string> = {
+        'Food': '#ef4444',
+        'Housing': '#f97316',
+        'Transport': '#eab308',
+        'Bills': '#22c55e',
+        'Shopping': '#3b82f6',
+        'Fun': '#8b5cf6',
+        'Other': '#6b7280',
+        'Travel': '#06b6d4',
+        'Transfer': '#8b5cf6',
+        'Payment': '#10b981'
+      };
+
+      // Convert to array format
+      const categories = Object.keys(categoryMap).map(name => ({
+        name,
+        amount: categoryMap[name],
+        color: colors[name] || '#9ca3af'
+      })).sort((a, b) => b.amount - a.amount);
+
+      setExpenseCategories(categories);
+      
+    } catch (e) {
+      console.error('Failed to load transactions', e);
+    }
+  };
 
   const totalExpenses = expenseCategories.reduce((sum, cat) => sum + cat.amount, 0);
   const totalBalance = monthlyIncome - totalExpenses;

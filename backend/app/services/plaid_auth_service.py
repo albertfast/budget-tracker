@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 
-# Legacy Plaid client (2019)
-from plaid import Client
+# Plaid 2019 API client
+from plaid.client import Client
 
 from ..models.user import User
 from ..models.bank_account import BankAccount

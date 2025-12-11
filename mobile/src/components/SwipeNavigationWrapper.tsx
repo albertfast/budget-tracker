@@ -19,7 +19,7 @@ export default function SwipeNavigationWrapper({
   const navigation = useNavigation();
 
   // Tab order for swipe navigation
-  const tabs = ['Home', 'Transactions', 'FinancialAnalysis', 'FinancialAnalysisTwo', 'Screening', 'Add', 'Account'];
+  const tabs = ['Home', 'Transactions', 'FinancialAnalysis', 'FinancialAnalysisTwo', 'Screening', 'Account'];
   const currentTabIndex = tabs.indexOf(currentTab);
   
   // State for advanced gesture tracking
@@ -49,7 +49,6 @@ export default function SwipeNavigationWrapper({
       'FinancialAnalysis': '#0b1220',
       'FinancialAnalysisTwo': '#0b1220',
       'Screening': '#0b1220', 
-      'Add': '#0b1220',
       'Connect Account': '#0b1220',
       'Account': '#0b1220'
     };

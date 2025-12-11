@@ -3,9 +3,9 @@ import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '@/screens/HomeScreen';
 import TransactionsScreen from '@/screens/TransactionsScreen';
-import AddScreen from '@/screens/AddScreen';
 import AccountScreen from '@/screens/AccountScreen';
 import CompanyScreeningScreen from '@/screens/CompanyScreeningScreen';
+import FinancialAnalysisScreen from '@/screens/FinancialAnalysisScreen';
 import FinancialAnalysisScreenTwo from '@/screens/FinancialAnalysisScreenTwo';
 import ConnectAccountScreen from '@/screens/ConnectAccountScreen';
 import PortfolioChartScreen from '@/screens/PortfolioChartScreen';
@@ -13,8 +13,8 @@ import PortfolioChartScreen from '@/screens/PortfolioChartScreen';
 type RootTabParamList = {
   Home: undefined;
   Transactions: undefined;
-  Add: undefined;
   Screening: undefined;
+  FinancialAnalysis: undefined;
   FinancialAnalysisTwo: undefined;
   'Connect Account': undefined;
   PortfolioChart: undefined;
@@ -62,18 +62,18 @@ export default function BottomTabs() {
         }}
       />
       <Tab.Screen 
+        name="FinancialAnalysis" 
+        component={FinancialAnalysisScreen}
+        options={{
+          tabBarLabel: 'Analysis',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📊</Text>,
+        }}
+      />
+      <Tab.Screen 
         name="Screening" 
         component={CompanyScreeningScreen}
         options={{
           tabBarButton: () => null, // Hide from tab bar - access via Home screen
-        }}
-      />
-      <Tab.Screen 
-        name="Add" 
-        component={AddScreen}
-        options={{
-          tabBarLabel: 'Add',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>➕</Text>,
         }}
       />
       <Tab.Screen 
