@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     PLAID_CLIENT_ID: Optional[str] = None
     PLAID_SECRET: Optional[str] = None
     PLAID_ENV: str = "sandbox"  # sandbox, development, production
-    PLAID_PRODUCTS: list = ["transactions", "accounts", "identity"]
+    PLAID_PRODUCTS: list = ["transactions", "auth"] # Changed from accounts, identity to standard products
     PLAID_COUNTRY_CODES: list = ["US"]
     
     # Encryption for sensitive data

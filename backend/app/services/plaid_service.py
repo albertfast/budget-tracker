@@ -35,14 +35,35 @@ class PlaidService:
     def create_link_token(self, user_id: str, user_email: str) -> Dict[str, Any]:
         """Create a link token for Plaid Link initialization"""
         try:
+            # Convert product strings to Product enums
+            products = []
+            for prod in settings.PLAID_PRODUCTS:
+                # Handle case sensitivity and enum mapping
+                try:
+                    products.append(Products(prod))
+                except ValueError:
+                    logger.warning(f"Invalid product: {prod}")
+
+            # Convert country code strings to CountryCode enums
+            country_codes = []
+            for cc in settings.PLAID_COUNTRY_CODES:
+                try:
+                    country_codes.append(CountryCode(cc))
+                except ValueError:
+                    logger.warning(f"Invalid country code: {cc}")
+
             request = LinkTokenCreateRequest(
-                products=[getattr(Products, prod) for prod in settings.PLAID_PRODUCTS],
+                products=products,
                 client_name=settings.PROJECT_NAME,
-                country_codes=[getattr(CountryCode, cc) for cc in settings.PLAID_COUNTRY_CODES],
+                country_codes=country_codes,
                 language='en',
                 user=LinkTokenCreateRequestUser(client_user_id=user_id)
             )
             
+            # Add redirect_uri for Android/iOS if needed (optional for mobile SDKs usually, but good practice)
+            # if settings.PLAID_REDIRECT_URI:
+            #    request['redirect_uri'] = settings.PLAID_REDIRECT_URI
+
             response = self.client.link_token_create(request)
             return {
                 "link_token": response['link_token'],
@@ -50,6 +71,9 @@ class PlaidService:
             }
         except Exception as e:
             logger.error(f"Error creating link token: {str(e)}")
+            # Log the full error for debugging
+            if hasattr(e, 'body'):
+                logger.error(f"Plaid API Error Body: {e.body}")
             raise Exception(f"Failed to create link token: {str(e)}")
     
     def exchange_public_token(self, public_token: str) -> Dict[str, str]:
