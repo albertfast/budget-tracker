@@ -14,7 +14,8 @@
       "web"
     ],
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "react-native-plaid-link-sdk"
     ]
   }
 }
