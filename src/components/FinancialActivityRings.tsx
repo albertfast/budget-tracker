@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -75,7 +76,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
         style={{ transform: [{ rotate: '-90deg' }] }}
       >
         <Defs>
-          <LinearGradient
+          <SvgLinearGradient
             id={`gradient-${data.label.toLowerCase()}`}
             x1="0%"
             y1="0%"
@@ -84,7 +85,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
           >
             <Stop offset="0%" stopColor={data.color} stopOpacity={1} />
             <Stop offset="100%" stopColor={data.color} stopOpacity={0.6} />
-          </LinearGradient>
+          </SvgLinearGradient>
         </Defs>
 
         {/* Background circle */}

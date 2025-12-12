@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated, Text, Easing, ImageBackground } from 'react-native';
+import { View, StyleSheet, Dimensions, Animated, Text, Easing } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface ChartData {
   month: string;

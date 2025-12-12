@@ -224,7 +224,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8001
 
 ```bash
 npm install
-npm start
+npx expo start --tunnel
 ```
 
 ## 📝 Environment Variables
