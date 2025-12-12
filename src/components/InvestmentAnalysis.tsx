@@ -1,0 +1,657 @@
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
+import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
+
+interface Transaction {
+  id: string;
+  amount: number;
+  date: string;
+  category_primary?: string;
+  description?: string;
+}
+
+interface InvestmentAnalysisProps {
+  transactions?: Transaction[];
+}
+
+export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnalysisProps) {
+  const [selectedView, setSelectedView] = useState<'overview' | 'recommendations' | 'savings'>('overview');
+  const [data, setData] = useState(generateMockInvestmentData());
+
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const income = transactions
+        .filter(t => Number(t.amount) > 0)
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+        
+      const expenses = transactions
+        .filter(t => Number(t.amount) < 0)
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+      
+      const savings = Math.max(0, income - expenses);
+      const savingsRate = income > 0 ? savings / income : 0;
+      const expenseRatio = income > 0 ? expenses / income : 0;
+      
+      // Determine risk level based on savings rate
+      let riskLevel: 'low' | 'moderate' | 'high' = 'moderate';
+      if (savingsRate > 0.5) riskLevel = 'low';
+      else if (savingsRate > 0.3) riskLevel = 'moderate';
+      else if (savingsRate < 0.1) riskLevel = 'high';
+
+      // Generate dynamic recommendations
+      const newRecommendations: InvestmentRecommendation[] = [];
+      
+      // 1. Savings Rate Logic
+      if (savingsRate < 0.2) {
+        newRecommendations.push({
+          id: 'rec_save_1',
+          title: 'Boost Your Savings',
+          description: 'Your savings rate is under 20%. Small cuts in daily spending can help you reach the recommended 20% target.',
+          type: 'savings',
+          priority: 'high',
+          potential_impact: income * 0.05,
+          risk_level: 'low',
+          action_items: ['Track daily coffee/snack purchases', 'Review subscription services', 'Set up auto-transfer on payday']
+        });
+      } else {
+        newRecommendations.push({
+          id: 'rec_save_ok',
+          title: 'Maintain Savings Momentum',
+          description: 'Great job maintaining a healthy savings rate! Consider increasing it by 1% next month.',
+          type: 'savings',
+          priority: 'low',
+          risk_level: 'low'
+        });
+      }
+      
+      // 2. Expense Ratio Logic
+      if (expenseRatio > 0.8) {
+        newRecommendations.push({
+          id: 'rec_exp_high',
+          title: 'High Expense Ratio',
+          description: 'Expenses are consuming over 80% of your income. This leaves little room for unexpected costs.',
+          type: 'allocation',
+          priority: 'high',
+          potential_impact: expenses * 0.1,
+          risk_level: 'moderate'
+        });
+      }
+
+      // 3. Investment Logic (Surplus)
+      if (savings > 500) {
+        newRecommendations.push({
+          id: 'rec_inv_opp',
+          title: 'Investment Opportunity',
+          description: `You have a monthly surplus of $${savings.toFixed(0)}. Putting this into a diversified index fund could grow your wealth significantly.`,
+          type: 'investment',
+          priority: 'medium',
+          potential_impact: savings * 0.07, // 7% return assumption
+          expected_return: 0.07,
+          risk_level: 'moderate'
+        });
+      }
+
+      // 4. Emergency Fund (Always relevant if not explicitly tracked yet)
+      newRecommendations.push({
+        id: 'rec_emergency',
+        title: 'Emergency Fund Check',
+        description: 'Ensure you have 3-6 months of expenses in a high-yield savings account before aggressive investing.',
+        type: 'savings',
+        priority: 'medium',
+        risk_level: 'very_low'
+      });
+
+      setData({
+        ...data,
+        recommendations: newRecommendations, // Use the new list directly
+        riskProfile: {
+          ...data.riskProfile,
+          risk_level: riskLevel,
+          expense_ratio: expenseRatio
+        },
+        savingsPotential: {
+          ...data.savingsPotential,
+          savings_rate: savingsRate,
+          current_monthly_savings: savings,
+          total_monthly_potential: savings * 1.2 + 205, // Base + optimization
+          annual_potential: (savings * 1.2 + 205) * 12,
+          subscription_optimization_savings: 85,
+          category_optimization_savings: 120
+        }
+      });
+    }
+  }, [transactions]);
+
+  const { recommendations, riskProfile, savingsPotential } = data;
+
+  const getRiskEmoji = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'very_low': return '🟢';
+      case 'low': return '🔵';
+      case 'medium': return '🟡';
+      case 'high': return '🟠';
+      case 'very_high': return '🔴';
+      default: return '⚪';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const renderOverview = () => (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>💼 Investment Overview</Text>
+      
+      {/* Risk Profile Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📊 Risk Profile</Text>
+        <View style={styles.profileRow}>
+          <Text style={styles.profileLabel}>Risk Level:</Text>
+          <Text style={[styles.profileValue, { color: getPriorityColor(riskProfile.risk_level === 'low' ? 'low' : riskProfile.risk_level === 'high' ? 'high' : 'medium') }]}>
+            {riskProfile.risk_level.toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.profileRow}>
+          <Text style={styles.profileLabel}>Savings Rate:</Text>
+          <Text style={styles.profileValue}>{(savingsPotential.savings_rate * 100).toFixed(1)}%</Text>
+        </View>
+        <View style={styles.profileRow}>
+          <Text style={styles.profileLabel}>Expense Ratio:</Text>
+          <Text style={styles.profileValue}>{(riskProfile.expense_ratio * 100).toFixed(1)}%</Text>
+        </View>
+      </View>
+
+      {/* Savings Potential Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>💰 Savings Potential</Text>
+        <View style={styles.savingsGrid}>
+          <View style={styles.savingsItem}>
+            <Text style={styles.savingsAmount}>
+              ${savingsPotential.current_monthly_savings.toFixed(0)}
+            </Text>
+            <Text style={styles.savingsLabel}>Current Monthly</Text>
+          </View>
+          <View style={styles.savingsItem}>
+            <Text style={[styles.savingsAmount, { color: '#22c55e' }]}>
+              ${savingsPotential.total_monthly_potential.toFixed(0)}
+            </Text>
+            <Text style={styles.savingsLabel}>Potential Monthly</Text>
+          </View>
+          <View style={styles.savingsItem}>
+            <Text style={[styles.savingsAmount, { color: '#3b82f6' }]}>
+              ${savingsPotential.annual_potential.toFixed(0)}
+            </Text>
+            <Text style={styles.savingsLabel}>Annual Potential</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderRecommendations = () => (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>🎯 Investment Recommendations</Text>
+      {recommendations.map((rec, index) => (
+        <View key={rec.id || index} style={styles.recommendationCard}>
+          <View style={styles.recommendationHeader}>
+            <Text style={styles.recommendationTitle}>{rec.title}</Text>
+            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(rec.priority) }]}>
+              <Text style={styles.priorityText}>{rec.priority.toUpperCase()}</Text>
+            </View>
+          </View>
+          
+          <Text style={styles.recommendationDescription}>{rec.description}</Text>
+          
+          <View style={styles.recommendationDetails}>
+            {rec.recommended_allocation !== undefined && rec.recommended_allocation > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Monthly Allocation:</Text>
+                <Text style={styles.detailValue}>${rec.recommended_allocation}</Text>
+              </View>
+            )}
+            {rec.potential_savings !== undefined && rec.potential_savings > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Potential Savings:</Text>
+                <Text style={styles.detailValue}>${rec.potential_savings}/month</Text>
+              </View>
+            )}
+            {rec.expected_return !== undefined && rec.expected_return > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Expected Return:</Text>
+                <Text style={styles.detailValue}>{(rec.expected_return * 100).toFixed(1)}%</Text>
+              </View>
+            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Risk Level:</Text>
+              <View style={styles.riskContainer}>
+                <Text style={styles.riskEmoji}>{getRiskEmoji(rec.risk_level || 'none')}</Text>
+                <Text style={styles.detailValue}>{(rec.risk_level || 'none').replace('_', ' ').toUpperCase()}</Text>
+              </View>
+            </View>
+          </View>
+
+          {rec.action_items && (
+            <View style={styles.actionItemsContainer}>
+              <Text style={styles.actionItemsTitle}>Action Items:</Text>
+              {rec.action_items.map((item, itemIndex) => (
+                <Text key={itemIndex} style={styles.actionItem}>• {item}</Text>
+              ))}
+            </View>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+
+
+
+// ... existing imports
+
+  const renderSavingsOptimization = () => {
+    // Circular Progress Logic
+    const radius = 80;
+    const strokeWidth = 12;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min(1, savingsPotential.current_monthly_savings / savingsPotential.total_monthly_potential);
+    const strokeDashoffset = circumference - (progress * circumference);
+    
+    return (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>📈 Savings Optimization</Text>
+      
+      <View style={styles.optimizationCard}>
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <Svg width={200} height={200} viewBox="0 0 200 200">
+            {/* Background Circle */}
+            <Circle
+              cx="100"
+              cy="100"
+              r={radius}
+              stroke="#1e3a8a"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              opacity={0.3}
+            />
+            {/* Progress Circle */}
+            <G rotation="-90" origin="100, 100">
+              <Circle
+                cx="100"
+                cy="100"
+                r={radius}
+                stroke="#3b82f6"
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+              />
+            </G>
+          </Svg>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: '#9fb3c8', fontSize: 14 }}>Efficiency</Text>
+            <Text style={{ color: '#ffffff', fontSize: 32, fontWeight: 'bold' }}>{(progress * 100).toFixed(0)}%</Text>
+          </View>
+        </View>
+
+        <View style={styles.comparisonContainer}>
+          <View style={styles.comparisonItem}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.comparisonLabel}>Current Savings</Text>
+              <Text style={[styles.comparisonAmount, { color: '#3b82f6' }]}>${savingsPotential.current_monthly_savings.toFixed(0)}</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { 
+                    width: `${(savingsPotential.current_monthly_savings / savingsPotential.total_monthly_potential) * 100}%`,
+                    backgroundColor: '#3b82f6'
+                  }
+                ]} 
+              />
+            </View>
+          </View>
+          
+          <View style={styles.comparisonItem}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={styles.comparisonLabel}>Potential Savings</Text>
+              <Text style={[styles.comparisonAmount, { color: '#10b981' }]}>${savingsPotential.total_monthly_potential.toFixed(0)}</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '100%', backgroundColor: '#10b981' }]} />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.optimizationBreakdown}>
+          <Text style={styles.breakdownTitle}>Optimization Opportunities</Text>
+          <View style={styles.breakdownRow}>
+            <Text style={styles.breakdownLabel}>Subscription Optimization</Text>
+            <Text style={styles.breakdownValue}>+${savingsPotential.subscription_optimization_savings}</Text>
+          </View>
+          <View style={styles.breakdownRow}>
+            <Text style={styles.breakdownLabel}>Category Optimization</Text>
+            <Text style={styles.breakdownValue}>+${savingsPotential.category_optimization_savings}</Text>
+          </View>
+          <View style={[styles.breakdownRow, styles.breakdownTotal]}>
+            <Text style={styles.breakdownTotalLabel}>Total Potential Increase</Text>
+            <Text style={styles.breakdownTotalValue}>
+              +${savingsPotential.subscription_optimization_savings + savingsPotential.category_optimization_savings}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Investment Analysis</Text>
+      
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, selectedView === 'overview' && styles.tabActive]}
+          onPress={() => setSelectedView('overview')}
+        >
+          <Text style={[styles.tabText, selectedView === 'overview' && styles.tabTextActive]}>Overview</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, selectedView === 'recommendations' && styles.tabActive]}
+          onPress={() => setSelectedView('recommendations')}
+        >
+          <Text style={[styles.tabText, selectedView === 'recommendations' && styles.tabTextActive]}>Recommendations</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, selectedView === 'savings' && styles.tabActive]}
+          onPress={() => setSelectedView('savings')}
+        >
+          <Text style={[styles.tabText, selectedView === 'savings' && styles.tabTextActive]}>Savings</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.contentContainer}>
+        {selectedView === 'overview' && renderOverview()}
+        {selectedView === 'recommendations' && renderRecommendations()}
+        {selectedView === 'savings' && renderSavingsOptimization()}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#111a30',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 40,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#9fb3c8',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#0f1930',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  tabActive: {
+    backgroundColor: '#1e40af',
+  },
+  tabText: {
+    fontSize: 12,
+    color: '#7a8fa5',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  contentContainer: {
+    // Removed fixed height to allow full expansion
+  },
+  sectionContainer: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#0f1930',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    marginBottom: 8,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  profileLabel: {
+    fontSize: 13,
+    color: '#7a8fa5',
+  },
+  profileValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#9fb3c8',
+  },
+  savingsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  savingsItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  savingsAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#22c55e',
+    marginBottom: 4,
+  },
+  savingsLabel: {
+    fontSize: 10,
+    color: '#7a8fa5',
+    textAlign: 'center',
+  },
+  recommendationCard: {
+    backgroundColor: '#0f1930',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recommendationTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    flex: 1,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  priorityText: {
+    fontSize: 10,
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
+  recommendationDescription: {
+    fontSize: 12,
+    color: '#7a8fa5',
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  recommendationDetails: {
+    marginBottom: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#7a8fa5',
+  },
+  detailValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9fb3c8',
+  },
+  riskContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  riskEmoji: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  actionItemsContainer: {
+    backgroundColor: '#0a1425',
+    borderRadius: 6,
+    padding: 8,
+    marginTop: 8,
+  },
+  actionItemsTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    marginBottom: 6,
+  },
+  actionItem: {
+    fontSize: 11,
+    color: '#7a8fa5',
+    marginBottom: 2,
+    paddingLeft: 4,
+  },
+  optimizationCard: {
+    backgroundColor: '#0f1930',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
+  },
+  comparisonContainer: {
+    marginBottom: 16,
+  },
+  comparisonItem: {
+    marginBottom: 12,
+  },
+  comparisonLabel: {
+    fontSize: 12,
+    color: '#7a8fa5',
+    marginBottom: 4,
+  },
+  comparisonAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    marginBottom: 6,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#1e3a8a',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  optimizationBreakdown: {
+    borderTopWidth: 1,
+    borderTopColor: '#1e3a8a',
+    paddingTop: 12,
+  },
+  breakdownTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+    marginBottom: 8,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  breakdownLabel: {
+    fontSize: 12,
+    color: '#7a8fa5',
+  },
+  breakdownValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#22c55e',
+  },
+  breakdownTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#1e3a8a',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  breakdownTotalLabel: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#9fb3c8',
+  },
+  breakdownTotalValue: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#22c55e',
+  },
+});

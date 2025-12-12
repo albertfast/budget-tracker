@@ -1,0 +1,16 @@
+{
+  "name": "SmartBudget Edge Functions",
+  "version": "1.0.0",
+  "description": "Edge Functions for SmartBudget Plaid integration",
+  "main": "index.ts",
+  "dependencies": {
+    "@supabase/functions-js": "^2.0.0",
+    "plaid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "scripts": {
+    "serve": "supabase functions serve plaid-webhook --no-verify-jwt"
+  }
+}
