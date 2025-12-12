@@ -1,177 +1,261 @@
-# Supabase CLI
+# SmartBudget - Personal Finance Tracker
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A modern personal finance tracking application built with React Native (Expo) and FastAPI, featuring automated bank account integration via Plaid, AI-powered spending analysis, and investment recommendations.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## 🚀 Features
 
-This repository contains all the functionality for Supabase CLI.
+- **Bank Account Integration**: Connect your bank accounts securely via Plaid
+- **Automated Transaction Sync**: Automatically fetch and categorize transactions
+- **Manual Entry**: Add custom income and expense entries
+- **Financial Insights**: Dynamic charts showing spending trends and financial activity
+- **Category Analysis**: Track spending across different categories
+- **Investment Analysis**: Get personalized investment recommendations
+- **Real-time Updates**: Live synchronization with your financial data
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+## 🏗️ Architecture
 
-## Getting started
+### Frontend (Mobile App)
+- **Framework**: React Native with Expo
+- **Language**: TypeScript
+- **UI**: Custom components with animations
+- **Navigation**: Bottom tab navigation
+- **State Management**: React Context API
+- **Database**: Supabase (PostgreSQL)
 
-### Install the CLI
+### Backend (API)
+- **Framework**: FastAPI (Python)
+- **Integration**: Plaid API for bank connections
+- **Database**: Supabase
+- **Features**: Transaction sync, AI analysis, investment recommendations
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+## 📋 Prerequisites
 
-```bash
-npm i supabase --save-dev
-```
+- Docker and Docker Compose
+- Expo Go app on your mobile device (for testing)
+- Internet connection for Plaid API access
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+## 🛠️ Quick Start with Docker
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
+### 1. Build and Start Services
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
-
-<details>
-  <summary><b>macOS</b></summary>
-
-  Available via [Homebrew](https://brew.sh). To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
+From the project root directory:
 
 ```bash
-supabase bootstrap
+docker-compose build
+docker-compose up -d
 ```
 
-Or using npx:
+This will start:
+- **Backend API**: Running on `http://localhost:8001`
+- **Mobile App**: Expo dev server on `http://localhost:19000`
+
+### 2. Access Points
+
+- **Backend API Documentation**: http://localhost:8001/docs
+- **Backend Health Check**: http://localhost:8001/health
+- **Expo Dev Server**: http://localhost:19000
+
+### 3. Connect with Expo Go
+
+1. Install Expo Go on your mobile device
+2. Open Expo Go app
+3. Scan the QR code from the terminal or from http://localhost:19000
+4. The app will load on your device
+
+### 4. Test Credentials
+
+The app comes with pre-configured Plaid Sandbox test credentials:
+
+**Supabase Login:**
+- Username: `user_ewa_user@good`
+- Password: `abc123`
+
+**Plaid Sandbox Bank:**
+This account is already connected to Plaid Sandbox Bank with test transaction data.
+
+## 📱 Mobile App Structure
+
+```
+mobile/
+├── App.tsx                 # Main app entry point
+├── src/
+│   ├── components/         # Reusable UI components
+│   │   ├── AnimatedChart.tsx
+│   │   ├── FinancialActivityRings.tsx
+│   │   ├── FinancialSummary.tsx
+│   │   ├── PlaidConnection.tsx
+│   │   └── ...
+│   ├── screens/            # Main app screens
+│   │   ├── HomeScreen.tsx
+│   │   ├── TransactionsScreen.tsx
+│   │   ├── ConnectAccountScreen.tsx
+│   │   └── AccountScreen.tsx
+│   ├── navigation/         # Navigation configuration
+│   │   └── BottomTabs.tsx
+│   ├── services/           # API and data services
+│   │   ├── plaidTransactionService.ts
+│   │   ├── supabaseClient.ts
+│   │   └── ...
+│   ├── context/            # React Context providers
+│   │   └── AuthContext.tsx
+│   └── types/              # TypeScript type definitions
+└── package.json
+```
+
+## 🔧 Backend API Structure
+
+```
+backend/
+├── main.py                 # FastAPI main application
+├── requirements.txt        # Python dependencies
+├── services/               # Service modules
+│   ├── plaidService.ts
+│   ├── config.ts
+│   └── ...
+└── types/                  # Type definitions
+```
+
+## 🔌 API Endpoints
+
+### Plaid Integration
+
+- `POST /api/plaid/create-link-token` - Create a Plaid Link token
+- `POST /api/plaid/exchange-token` - Exchange public token for access token
+- `POST /api/plaid/accounts` - Get connected bank accounts
+- `POST /api/plaid/transactions` - Get transactions for a date range
+- `POST /api/plaid/sync_transactions` - Sync latest transactions (last 30 days)
+
+### Plaid Sandbox Testing
+
+- `POST /api/plaid/sandbox/public_token` - Create sandbox test account
+- `POST /api/plaid/sandbox/custom_user` - Create custom test user with specific data
+
+### AI Analysis
+
+- `POST /api/ai/analyze_spending` - Get AI-powered spending analysis
+- `POST /api/ai/investment_advice` - Get personalized investment recommendations
+
+## 🎯 Usage Guide
+
+### 1. Login
+- Open the app and log in with the test credentials
+- You'll be redirected to the home screen
+
+### 2. Home Screen
+- View your financial activity rings (Budget, Savings, Investment)
+- Check monthly spending trends in the animated chart
+- Review financial summary with income, expenses, and net balance
+- Explore category breakdowns
+
+### 3. Transactions Screen
+- View all your transactions
+- Add manual entries:
+  - Enter amount
+  - Add description
+  - Select date (improved date picker!)
+  - Choose category (Food, Transport, Bills, Shopping, Fun, Other)
+- Edit or delete existing transactions
+- View spending breakdown by category
+
+### 4. Connect Account Screen
+- Connect additional bank accounts via Plaid
+- Manage connected accounts
+- Configure auto-sync settings
+
+### 5. Account Screen
+- View profile information
+- Manage settings
+- Log out
+
+## 🔐 Security Notes
+
+- All bank connections are secured via Plaid's encryption
+- Test environment uses Plaid Sandbox (no real bank data)
+- For production use, ensure proper environment variables and security measures
+
+## 🐛 Troubleshooting
+
+### Services won't start
+```bash
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+### View logs
+```bash
+# Backend logs
+docker-compose logs backend
+
+# Mobile app logs
+docker-compose logs mobile
+
+# All logs
+docker-compose logs -f
+```
+
+### Reset database
+Supabase database can be reset via the Supabase dashboard or by reinitializing the schema.
+
+## 🛑 Stopping Services
 
 ```bash
-npx supabase bootstrap
+docker-compose down
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
+To also remove volumes:
+```bash
+docker-compose down -v
 ```
+
+## 🚀 Development
+
+### Run Backend Locally (without Docker)
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
+```
+
+### Run Mobile App Locally (without Docker)
+
+```bash
+npm install
+npm start
+```
+
+## 📝 Environment Variables
+
+The app uses the following environment variables (configured in Docker):
+
+```
+EXPO_PUBLIC_API_URL=http://10.0.0.214:8001
+PLAID_CLIENT_ID=68f9e88c17270900222dae83
+PLAID_SECRET=ce8fb384dc57b556987e6874f719d9
+PLAID_ENV=sandbox
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Plaid for banking integration
+- Supabase for backend infrastructure
+- Expo for mobile development framework
+- FastAPI for the backend API
+
+---
+
+**Note**: This is a test environment using Plaid Sandbox. For production deployment, proper security measures, environment configuration, and compliance with financial regulations must be implemented.

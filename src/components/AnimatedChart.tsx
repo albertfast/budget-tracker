@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated, Text, Easing } from 'react-native';
+import { View, StyleSheet, Dimensions, Animated, Text, Easing, ImageBackground } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 
 interface ChartData {
@@ -47,35 +47,40 @@ export default function AnimatedChart({
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Animated.Text
-        style={[
-          styles.title,
-          {
-            opacity: titleFade,
-            transform: [{ translateY: titleTranslate }]
-          }
-        ]}
-      >
-        {title}
-      </Animated.Text>
+    <LinearGradient
+      colors={['#1a2332', '#0a0e27', '#050714']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+        <Animated.Text
+          style={[
+            styles.title,
+            {
+              opacity: titleFade,
+              transform: [{ translateY: titleTranslate }]
+            }
+          ]}
+        >
+          {title}
+        </Animated.Text>
 
-      <View style={styles.chartContainer}>
-        {/* Grid lines using SVG */}
-        <Svg width={chartWidth} height={chartHeight} style={styles.gridSvg}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <Line
-              key={i}
-              x1={0}
-              y1={(chartHeight / 4) * i}
-              x2={chartWidth}
-              y2={(chartHeight / 4) * i}
-              stroke="#1a2332"
-              strokeWidth="1"
-              opacity={0.3}
-            />
-          ))}
-        </Svg>
+        <View style={styles.chartContainer}>
+          {/* Grid lines using SVG */}
+          <Svg width={chartWidth} height={chartHeight} style={styles.gridSvg}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Line
+                key={i}
+                x1={0}
+                y1={(chartHeight / 4) * i}
+                x2={chartWidth}
+                y2={(chartHeight / 4) * i}
+                stroke="#ffffff"
+                strokeWidth="1"
+                opacity={0.15}
+              />
+            ))}
+          </Svg>
 
         {/* Bars Container */}
         <View style={[styles.barsContainer, { width: chartWidth, height: chartHeight }]}>
@@ -150,21 +155,20 @@ export default function AnimatedChart({
           })}
         </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0a0e27',
     borderRadius: 20,
     padding: 20,
     margin: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   title: {
     fontSize: 18,

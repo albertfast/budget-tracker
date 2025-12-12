@@ -456,7 +456,7 @@ def analyze_spending(request: AnalyzeSpendingRequest):
                 recommendations.append({
                     "type": "warning",
                     "category": top_category,
-                    "message": f"{top_category} harcamanız toplam harcamanızın %{percentage:.1f}'ini oluşturuyor. Bu kategoride tasarruf yapabilirsiniz.",
+                    "message": f"Your {top_category} spending represents {percentage:.1f}% of your total expenses. Consider reducing spending in this category.",
                     "potential_savings": top_amount * 0.2  # 20% savings potential
                 })
         
@@ -474,7 +474,7 @@ def analyze_spending(request: AnalyzeSpendingRequest):
             recommendations.append({
                 "type": "info",
                 "category": "Subscriptions",
-                "message": f"Abonelik harcamalarınız: ${total_subscriptions:.2f}. Kullanmadığınız abonelikleri iptal etmeyi düşünün.",
+                "message": f"Your subscription costs: ${total_subscriptions:.2f}. Consider canceling unused subscriptions.",
                 "potential_savings": total_subscriptions * 0.3
             })
         
@@ -509,10 +509,10 @@ def investment_advice(request: dict):
         
         if disposable_income <= 0:
             return {
-                "message": "Gelir ve gider dengenizi optimize etmelisiniz",
+                "message": "You need to optimize your income and expense balance",
                 "recommendations": [{
                     "type": "warning",
-                    "message": "Öncelikle giderlerinizi azaltmaya odaklanın"
+                    "message": "Focus on reducing your expenses first"
                 }]
             }
         
@@ -527,7 +527,7 @@ def investment_advice(request: dict):
             recommendations.append({
                 "type": "priority",
                 "category": "Emergency Fund",
-                "message": f"Öncelikle ${emergency_fund_needed:.2f} acil durum fonu oluşturun",
+                "message": f"First, build an emergency fund of ${emergency_fund_needed:.2f}",
                 "monthly_contribution": min(disposable_income * 0.3, emergency_fund_needed / 6),
                 "timeframe": "6-12 months"
             })
@@ -559,7 +559,7 @@ def investment_advice(request: dict):
             recommendations.append({
                 "type": "investment",
                 "category": asset_class.title(),
-                "message": f"{asset_class.title()} için aylık ${amount:.2f} yatırım yapın",
+                "message": f"Invest ${amount:.2f} monthly in {asset_class.title()}",
                 "percentage": percentage * 100,
                 "monthly_amount": amount
             })

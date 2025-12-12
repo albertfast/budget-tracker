@@ -50,25 +50,43 @@ export default function TransactionsScreen() {
     if (!user) return;
     try {
       setLoading(true);
+      console.log('[TransactionsScreen] Fetching transactions...');
       
-      const { data: txs, error: txError } = await supabase
-        .from('financial_records')
+      // Try transactions table first (where mock data is inserted)
+      const { data: txData, error: txErr } = await supabase
+        .from('transactions')
         .select('*')
-        .order('occurred_on', { ascending: false });
+        .order('date', { ascending: false });
+      
+      let txs = txData;
+      let txError = txErr;
+      
+      // Fallback to financial_records if needed
+      if (txErr) {
+        const { data: financialData, error: financialError } = await supabase
+          .from('financial_records')
+          .select('*')
+          .order('occurred_on', { ascending: false });
+        
+        txs = financialData;
+        txError = financialError;
+      }
 
       if (txError) throw txError;
+
+      console.log(`[TransactionsScreen] Found ${txs?.length || 0} transactions`);
 
       if (txs) {
         setItems(txs.map(t => ({
           id: t.id,
-          amount: t.amount,
-          category: t.category || 'Other',
-          desc: t.memo,
-          date: t.occurred_on ? t.occurred_on.split('T')[0] : formatISO(new Date()),
+          amount: Math.abs(Number(t.amount) || 0),
+          category: t.category_primary || t.category || 'Other',
+          desc: t.description || t.memo || '',
+          date: (t.date || t.occurred_on)?.split('T')[0] || formatISO(new Date()),
         })));
       }
     } catch (err) {
-      console.error('Error fetching transactions:', err);
+      console.error('[TransactionsScreen] Error fetching transactions:', err);
     } finally {
       setLoading(false);
     }
@@ -90,7 +108,8 @@ export default function TransactionsScreen() {
       const dateStr = formatISO(date);
       const isoDate = `${dateStr}T12:00:00Z`;
 
-      const txData = {
+      // Try financial_records first
+      let txData: any = {
         user_id: user.id,
         amount: value,
         memo: desc?.trim() || 'Manual Entry',
@@ -100,20 +119,70 @@ export default function TransactionsScreen() {
         currency: 'USD'
       };
 
+      let error;
+      
       if (editingId) {
-        // Update
-        const { error } = await supabase
+        // Try to update in financial_records
+        const { error: updateError } = await supabase
           .from('financial_records')
           .update(txData)
           .eq('id', editingId);
-        if (error) throw error;
+        
+        if (updateError) {
+          // Fallback to transactions table
+          const txDataFallback = {
+            amount: value,
+            description: desc?.trim() || 'Manual Entry',
+            category_primary: category,
+            date: isoDate,
+            is_manual: true
+          };
+          
+          const { error: txUpdateError } = await supabase
+            .from('transactions')
+            .update(txDataFallback)
+            .eq('id', editingId);
+          
+          error = txUpdateError;
+        }
       } else {
-        // Insert
-        const { error } = await supabase
+        // Try to insert into financial_records
+        const { error: insertError } = await supabase
           .from('financial_records')
           .insert(txData);
-        if (error) throw error;
+        
+        if (insertError) {
+          // Fallback to transactions table
+          // Get first bank account
+          const { data: bankAccounts } = await supabase
+            .from('bank_accounts')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1);
+          
+          if (bankAccounts && bankAccounts.length > 0) {
+            const txDataFallback = {
+              bank_account_id: bankAccounts[0].id,
+              amount: value,
+              description: desc?.trim() || 'Manual Entry',
+              category_primary: category,
+              date: isoDate,
+              is_manual: true
+            };
+            
+            const { error: txInsertError } = await supabase
+              .from('transactions')
+              .insert(txDataFallback);
+            
+            error = txInsertError;
+          } else {
+            alert('Please connect a bank account first');
+            return;
+          }
+        }
       }
+      
+      if (error) throw error;
 
       setAmount('');
       setDesc('');
@@ -141,10 +210,20 @@ export default function TransactionsScreen() {
 
   const onDelete = async (id: string) => {
     try {
-      const { error } = await supabase
+      // Try financial_records first
+      let { error } = await supabase
         .from('financial_records')
         .delete()
         .eq('id', id);
+      
+      if (error) {
+        // Fallback to transactions table
+        const result = await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', id);
+        error = result.error;
+      }
       
       if (error) throw error;
       
@@ -196,7 +275,6 @@ export default function TransactionsScreen() {
             <TextInput
               value={formatISO(date)}
               onChangeText={(txt) => {
-                // very light validation: YYYY-MM-DD
                 const m = /^\d{4}-\d{2}-\d{2}$/.exec(txt);
                 if (m) setDate(new Date(txt));
               }}
@@ -206,19 +284,23 @@ export default function TransactionsScreen() {
             />
           ) : (
             <View>
-              <Pressable onPress={() => setShowPicker(true)} style={[styles.input, styles.dateButton] }>
-                <Text style={{ color: 'white' }}>{formatISO(date)}</Text>
+              <Pressable onPress={() => setShowPicker(true)} style={[styles.input, styles.dateButton]}>
+                <Text style={styles.dateText}>{formatISO(date)}</Text>
               </Pressable>
               {showPicker && (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(evt: DateTimePickerEvent, selected) => {
-                    if (Platform.OS === 'android') setShowPicker(false);
-                    if (selected) setDate(selected);
-                  }}
-                />
+                <View style={styles.datePickerOverlay}>
+                  <View style={styles.datePickerContainer}>
+                    <DateTimePicker
+                      value={date}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(evt: DateTimePickerEvent, selected) => {
+                        if (selected) setDate(selected);
+                        setShowPicker(false);
+                      }}
+                    />
+                  </View>
+                </View>
               )}
             </View>
           )}
@@ -320,7 +402,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f1930',
     marginBottom: 4,
   },
-  dateButton: { justifyContent: 'center' },
+  dateButton: { 
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  dateText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  datePickerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  datePickerContainer: {
+    backgroundColor: '#111a30',
+    borderRadius: 12,
+    padding: 20,
+    minWidth: 300,
+  },
   pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginVertical: 8 },
   pill: {
     paddingHorizontal: 14,

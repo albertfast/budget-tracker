@@ -81,21 +81,28 @@ export default function HomeScreen() {
 
   // Calculate activity rings data
   const calculateActivityData = (transactions: Transaction[], monthlySummary?: MonthlySummary) => {
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
-    
-    let totalIncome = monthlySummary?.total_income || 0;
-    let totalExpenses = monthlySummary?.total_expenses || 0;
-    let totalSavings = monthlySummary?.net_savings || 0;
+    let totalIncome = 0;
+    let totalExpenses = 0;
     let totalInvestments = 0;
 
-    // For investments (cumulative)
+    // Calculate from actual transactions
     transactions.forEach(transaction => {
-      if (transaction.category_primary?.toLowerCase().includes('investment')) {
-        totalInvestments += Math.abs(transaction.amount);
+      const amount = Number(transaction.amount) || 0;
+      
+      if (amount > 0) {
+        totalIncome += amount;
+      } else if (amount < 0) {
+        totalExpenses += Math.abs(amount);
+        
+        // Check if it's an investment
+        const category = (transaction.category_primary || transaction.description || '').toLowerCase();
+        if (category.includes('investment') || category.includes('invest')) {
+          totalInvestments += Math.abs(amount);
+        }
       }
     });
 
+    const totalSavings = totalIncome - totalExpenses;
     const monthlyBudget = 4000;
     const savingsTarget = 1000;
     const investmentTarget = 1000;
@@ -104,23 +111,24 @@ export default function HomeScreen() {
       budget: {
         current: totalExpenses,
         target: monthlyBudget,
-        percentage: Math.min(Math.round((totalExpenses / monthlyBudget) * 100), 100),
+        percentage: totalExpenses > 0 ? Math.min(Math.round((totalExpenses / monthlyBudget) * 100), 100) : 0,
       },
       savings: {
-        current: totalSavings,
+        current: totalSavings > 0 ? totalSavings : 0,
         target: savingsTarget,
-        percentage: Math.min(Math.round((totalSavings / savingsTarget) * 100), 100),
+        percentage: totalSavings > 0 ? Math.min(Math.round((totalSavings / savingsTarget) * 100), 100) : 0,
       },
       investment: {
         current: totalInvestments,
         target: investmentTarget,
-        percentage: Math.min(Math.round((totalInvestments / investmentTarget) * 100), 100),
+        percentage: totalInvestments > 0 ? Math.min(Math.round((totalInvestments / investmentTarget) * 100), 100) : 0,
       },
     };
   };
 
   useFocusEffect(
     React.useCallback(() => {
+      console.log('[HomeScreen] Screen focused, fetching transactions...');
       fetchTransactions();
     }, [])
   );
@@ -128,26 +136,59 @@ export default function HomeScreen() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('financial_records')
+      console.log('[HomeScreen] Fetching transactions from Supabase...');
+      
+      // Try transactions table first (this is where mock data is inserted)
+      const { data: txData, error: txError } = await supabase
+        .from('transactions')
         .select('*')
-        .order('occurred_on', { ascending: false })
+        .order('date', { ascending: false })
         .limit(100);
       
+      let data = txData;
+      let error = txError;
+      
+      // If transactions table doesn't work, try financial_records
+      if (txError) {
+        console.log('[HomeScreen] Trying financial_records table...');
+        const { data: financialData, error: financialError } = await supabase
+          .from('financial_records')
+          .select('*')
+          .order('occurred_on', { ascending: false })
+          .limit(100);
+        
+        data = financialData;
+        error = financialError;
+      }
+      
       if (error) {
-        console.error('Error fetching transactions:', error);
+        console.error('[HomeScreen] Error fetching transactions:', error);
         return;
       }
       
-      if (data) {
-        setTransactions(data as Transaction[]);
+      console.log(`[HomeScreen] Found ${data?.length || 0} transactions`);
+      
+      if (data && data.length > 0) {
+        // Normalize the data structure
+        const normalizedData = data.map((tx: any) => ({
+          id: tx.id,
+          amount: Number(tx.amount) || 0,
+          date: tx.date || tx.occurred_on,
+          category_primary: tx.category_primary || tx.category,
+          merchant: tx.merchant,
+          memo: tx.memo,
+          description: tx.description
+        }));
+        
+        console.log(`[HomeScreen] Normalized ${normalizedData.length} transactions`);
+        setTransactions(normalizedData as Transaction[]);
         
         // Calculate derived data
-        const monthlyData = calculateMonthlyData(data as Transaction[]);
+        const monthlyData = calculateMonthlyData(normalizedData as Transaction[]);
         setChartData(monthlyData);
         
         // Calculate activity data
-        const activityMetrics = calculateActivityData(data as Transaction[]);
+        const activityMetrics = calculateActivityData(normalizedData as Transaction[]);
         setActivityData(activityMetrics);
       }
     } catch (error) {

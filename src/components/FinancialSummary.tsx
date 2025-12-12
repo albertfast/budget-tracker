@@ -1,23 +1,32 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
-import { Transaction } from '../backend/types';
+
+interface Transaction {
+  id: string;
+  amount: number;
+  date: string;
+  category_primary?: string;
+  description?: string;
+  merchant?: string;
+  memo?: string;
+}
 
 interface FinancialSummaryProps {
   transactions?: Transaction[];
 }
 
 export default function FinancialSummary({ transactions = [] }: FinancialSummaryProps) {
-  const incomeTransactions = transactions.filter(t => t.amount > 0);
-  const expenseTransactions = transactions.filter(t => t.amount < 0);
+  const incomeTransactions = transactions.filter(t => Number(t.amount) > 0);
+  const expenseTransactions = transactions.filter(t => Number(t.amount) < 0);
 
-  const monthlyIncome = incomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const monthlyIncome = incomeTransactions.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
   const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
   
   // Group expenses by category
   const categoryMap = new Map<string, number>();
   expenseTransactions.forEach(t => {
-    const cat = t.category_primary || (t.description || 'General');
+    const cat = t.category_primary || t.memo || t.description || 'Other';
     const current = categoryMap.get(cat) || 0;
     categoryMap.set(cat, current + Math.abs(Number(t.amount)));
   });

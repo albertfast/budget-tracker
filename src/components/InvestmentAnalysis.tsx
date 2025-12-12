@@ -2,9 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
-import { Transaction } from '../backend/types';
+
+interface Transaction {
+  id: string;
+  amount: number;
+  date: string;
+  category_primary?: string;
+  description?: string;
+}
+
 interface InvestmentAnalysisProps {
-  transactions?: any[];
+  transactions?: Transaction[];
 }
 
 export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnalysisProps) {
@@ -14,11 +22,11 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
   useEffect(() => {
     if (transactions.length > 0) {
       const income = transactions
-        .filter(t => t.amount > 0)
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+        .filter(t => Number(t.amount) > 0)
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
         
       const expenses = transactions
-        .filter(t => t.amount < 0)
+        .filter(t => Number(t.amount) < 0)
         .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
       
       const savings = Math.max(0, income - expenses);
@@ -165,15 +173,21 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
         <Text style={styles.cardTitle}>💰 Savings Potential</Text>
         <View style={styles.savingsGrid}>
           <View style={styles.savingsItem}>
-            <Text style={styles.savingsAmount}>${savingsPotential.current_monthly_savings}</Text>
+            <Text style={styles.savingsAmount}>
+              ${savingsPotential.current_monthly_savings.toFixed(0)}
+            </Text>
             <Text style={styles.savingsLabel}>Current Monthly</Text>
           </View>
           <View style={styles.savingsItem}>
-            <Text style={styles.savingsAmount}>${savingsPotential.total_monthly_potential}</Text>
+            <Text style={[styles.savingsAmount, { color: '#22c55e' }]}>
+              ${savingsPotential.total_monthly_potential.toFixed(0)}
+            </Text>
             <Text style={styles.savingsLabel}>Potential Monthly</Text>
           </View>
           <View style={styles.savingsItem}>
-            <Text style={styles.savingsAmount}>${savingsPotential.annual_potential.toLocaleString()}</Text>
+            <Text style={[styles.savingsAmount, { color: '#3b82f6' }]}>
+              ${savingsPotential.annual_potential.toFixed(0)}
+            </Text>
             <Text style={styles.savingsLabel}>Annual Potential</Text>
           </View>
         </View>
