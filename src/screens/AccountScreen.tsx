@@ -6,10 +6,11 @@ import {
   TextInput,
   Pressable,
   Image,
-  Alert,
   ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
+import Toast from '@/components/Toast';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOut as supaSignOut } from '@/services/supabaseAuth';
 import { useAuth } from '@/context/AuthContext';
 
@@ -20,30 +21,47 @@ export default function AccountScreen() {
   const [username, setUsername] = React.useState('');
   const [mode, setMode] = React.useState<'login' | 'signup'>('login');
   const [submitting, setSubmitting] = React.useState(false);
+  
+  // Toast state
+  const [toastVisible, setToastVisible] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState('');
+  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const onLogin = async () => {
-    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    if (!email.trim() || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
     try {
       setSubmitting(true);
       await signInWithEmail(email.trim(), password);
       await refreshSession();
-      Alert.alert('Success', 'Signed in');
+      showToast('Signed in successfully! 🎉');
     } catch (err: any) {
-      Alert.alert('Login failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Login failed. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
   const onCreate = async () => {
-    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    if (!email.trim() || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
     try {
       setSubmitting(true);
       await signUpWithEmail(email.trim(), password, username.trim() || undefined);
       await refreshSession();
-      Alert.alert('Success', 'Account created, check email if confirmation is required.');
+      showToast('Account created! Check your email for confirmation.');
     } catch (err: any) {
-      Alert.alert('Signup failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Signup failed. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -54,22 +72,24 @@ export default function AccountScreen() {
       setSubmitting(true);
       await signInWithGoogle();
       await refreshSession();
-      Alert.alert('Success', 'Signed in with Google');
+      showToast('Signed in with Google! 🎉');
     } catch (err: any) {
-      Alert.alert('Google Sign-In failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Google Sign-In failed', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const onForgot = () => Alert.alert('Forgot password', 'Password reset flow TBD in Supabase auth settings');
+  const onForgot = () => showToast('Password reset flow coming soon!', 'info');
+  
   const onLogout = async () => {
     try {
       setSubmitting(true);
       await supaSignOut();
       await refreshSession();
+      showToast('Signed out successfully');
     } catch (err: any) {
-      Alert.alert('Sign out failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Sign out failed', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -81,6 +101,18 @@ export default function AccountScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Account">
+      <Toast 
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
+      <ImageBackground
+        source={require('../public/images/nature_collection_31_20250803_185135.png')}
+        style={styles.backgroundImage}
+        imageStyle={styles.imageStyle}
+      >
+        <View style={styles.overlay}>
       <View style={styles.screen}>
         <Text style={styles.sectionHeader}>Account Settings</Text>
         <Text style={styles.sectionDescription}>Manage your profile and application preferences</Text>
@@ -172,19 +204,27 @@ export default function AccountScreen() {
         )}
       </View>
     </View>
+        </View>
+      </ImageBackground>
     </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
+  backgroundImage: { flex: 1 },
+  imageStyle: { opacity: 0.8 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.25)',
+  },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
-  card: { flex: 1, backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
+  card: { flex: 1, backgroundColor: 'rgba(44, 50, 88, 0.45)', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 8, paddingVertical: 8 },
   avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#0f1930' },
-  cardTitle: { color: 'white', fontWeight: '700', fontSize: 18 },
-  cardSubtitle: { color: '#9bb4da', fontSize: 14, marginTop: 2 },
-  label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600', marginTop: 4, marginBottom: 6 },
+  cardTitle: { color: 'white', backgroundColor: 'rgba(44, 50, 88, 0.45)', fontWeight: '700', fontSize: 18 },
+  cardSubtitle: { color: '#9bb4da', backgroundColor: 'rgba(3, 4, 8, 0.45)', fontSize: 14, marginTop: 2 },
+  label: { color: '#a9c1ea', backgroundColor: 'rgba(3, 4, 8, 0.45)', fontSize: 13, fontWeight: '600', marginTop: 4, marginBottom: 6 },
   input: {
     height: 48,
     borderRadius: 10,
@@ -196,28 +236,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   button: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#0e64eeff',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
     marginVertical: 4,
     minHeight: 44,
   },
-  googleBtn: { backgroundColor: '#ea4335' },
+  googleBtn: { backgroundColor: '#f02310ff' },
   disabledButton: { opacity: 0.6 },
   buttonText: { color: 'white', fontWeight: '700' },
   linkBtn: { alignSelf: 'flex-end', paddingVertical: 8, paddingHorizontal: 4 },
-  linkText: { color: '#7da0d6', fontWeight: '600' },
+  linkText: { color: '#7da0d6', backgroundColor: 'rgba(3, 4, 8, 0.45)', fontWeight: '600' },
   hr: { height: 1, backgroundColor: '#223459', marginVertical: 10, opacity: 0.6 },
   sectionHeader: {
     color: '#9fb3c8',
+    backgroundColor: 'rgba(3, 4, 8, 0.45)',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionDescription: {
-    color: '#7a8fa5',
+    color: '#edf5ebff',
+    backgroundColor: 'rgba(3, 4, 8, 0.45)',
     fontSize: 14,
     marginBottom: 20,
     textAlign: 'center',

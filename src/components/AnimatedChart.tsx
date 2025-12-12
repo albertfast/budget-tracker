@@ -47,12 +47,12 @@ export default function AnimatedChart({
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#1a2332', '#0a0e27', '#050714']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <ImageBackground
+      source={require('../public/images/nature_collection_26_20250803_204307.png')}
       style={styles.container}
+      imageStyle={styles.backgroundImage}
     >
+      <View style={styles.overlay}>
         <Animated.Text
           style={[
             styles.title,
@@ -77,7 +77,7 @@ export default function AnimatedChart({
                 y2={(chartHeight / 4) * i}
                 stroke="#ffffff"
                 strokeWidth="1"
-                opacity={0.15}
+                opacity={0.35}
               />
             ))}
           </Svg>
@@ -155,15 +155,24 @@ export default function AnimatedChart({
           })}
         </View>
       </View>
-    </LinearGradient>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
-    padding: 20,
     margin: 16,
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    opacity: 0.2,
+  },
+  overlay: {
+    backgroundColor: 'rgba(10, 14, 39, 0.80)',
+    borderRadius: 20,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

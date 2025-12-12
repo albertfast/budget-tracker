@@ -24,10 +24,10 @@ export default function App() {
             screenOptions={({ route }) => ({
               headerShown: false,
               tabBarStyle: { backgroundColor: '#fff', height: 80 },
-              tabBarActiveTintColor: '#008080',   // ✅ teal for active tab
+              tabBarActiveTintColor: '#008080',   
               tabBarInactiveTintColor: '#666',
-              tabBarIconStyle: { marginTop: 0 },   // ✅ keeps icon centered
-              tabBarLabelStyle: { marginBottom: 0 }, // ✅ keeps label aligned
+              tabBarIconStyle: { marginTop: 0 },   
+              tabBarLabelStyle: { marginBottom: 0 }, 
               tabBarIcon: ({ focused, color, size }) => {
                 let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
 

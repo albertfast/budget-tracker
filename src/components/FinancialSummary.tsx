@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ImageBackground } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 
 interface Transaction {
@@ -42,8 +42,14 @@ export default function FinancialSummary({ transactions = [] }: FinancialSummary
   const maxAmount = Math.max(monthlyIncome, totalExpenses > 0 ? totalExpenses : 100); // Avoid div by zero
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Financial Summary</Text>
+    <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ImageBackground
+        source={require('../public/images/image-1765508407632.png')}
+        style={styles.container}
+        imageStyle={styles.backgroundImage}
+      >
+        <View style={styles.overlay}>
+          <Text style={styles.title}>Financial Summary</Text>
       
       {/* Financial Summary Table */}
       <View style={styles.tableContainer}>
@@ -147,27 +153,28 @@ export default function FinancialSummary({ transactions = [] }: FinancialSummary
           </View>
         ))}
       </View>
+        </View>
+      </ImageBackground>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#111a30',
-    borderRadius: 12,
-    padding: 12,
-    marginHorizontal: 40, // Increased from 16 to 40 for arrow space
-    marginVertical: 8,
-    marginTop: 40,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+  scrollContainer: {
     flex: 1,
+    backgroundColor: '#0a0e27',
+  },
+  container: {
+    borderRadius: 20,
+    margin: 16,
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    opacity: 0.55,
+  },
+  overlay: {
+    backgroundColor: 'rgba(10, 14, 39, 0.45)',
+    padding: 20,
   },
   title: {
     fontSize: 18,

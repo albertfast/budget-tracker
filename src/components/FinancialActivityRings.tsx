@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -75,7 +75,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
         style={{ transform: [{ rotate: '-90deg' }] }}
       >
         <Defs>
-          <LinearGradient
+          <SvgLinearGradient
             id={`gradient-${data.label.toLowerCase()}`}
             x1="0%"
             y1="0%"
@@ -84,7 +84,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
           >
             <Stop offset="0%" stopColor={data.color} stopOpacity={1} />
             <Stop offset="100%" stopColor={data.color} stopOpacity={0.6} />
-          </LinearGradient>
+          </SvgLinearGradient>
         </Defs>
 
         {/* Background circle */}
@@ -210,12 +210,12 @@ export default function FinancialActivityRings({
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#1a2332', '#0a0e27', '#050714']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <ImageBackground
+      source={require('../public/images/nature_collection_38_20250803_185759.png')}
       style={styles.container}
+      imageStyle={styles.backgroundImage}
     >
+      <View style={styles.overlay}>
         <Animated.Text
           style={[
             styles.title,
@@ -259,15 +259,24 @@ export default function FinancialActivityRings({
             </View>
           ))}
         </Animated.View>
-    </LinearGradient>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
-    padding: 20,
     margin: 16,
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    opacity: 0.2,
+  },
+  overlay: {
+    backgroundColor: 'rgba(10, 14, 39, 0.80)',
+    borderRadius: 20,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

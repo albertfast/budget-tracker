@@ -25,8 +25,8 @@ app.add_middleware(
 )
 
 # Plaid configuration
-PLAID_CLIENT_ID = os.getenv("PLAID_CLIENT_ID", "68f9e88c17270900222dae83")
-PLAID_SECRET = os.getenv("PLAID_SECRET", "ce8fb384dc57b556987e6874f719d9")
+PLAID_CLIENT_ID = os.getenv("PLAID_CLIENT_ID")
+PLAID_SECRET = os.getenv("PLAID_SECRET")
 PLAID_ENV = os.getenv("PLAID_ENV", "sandbox").lower()
 PLAID_COUNTRY_CODES = ["US"]
 PLAID_PRODUCTS = ["transactions"]

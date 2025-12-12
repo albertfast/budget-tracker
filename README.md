@@ -224,7 +224,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8001
 
 ```bash
 npm install
-npm start
+npx expo start --tunnel
 ```
 
 ## 📝 Environment Variables
@@ -233,8 +233,8 @@ The app uses the following environment variables (configured in Docker):
 
 ```
 EXPO_PUBLIC_API_URL=http://10.0.0.214:8001
-PLAID_CLIENT_ID=68f9e88c17270900222dae83
-PLAID_SECRET=ce8fb384dc57b556987e6874f719d9
+PLAID_CLIENT_ID= #########################
+PLAID_SECRET= ############################
 PLAID_ENV=sandbox
 ```
 
