@@ -17,6 +17,39 @@ export type FinancialRecordInput = {
   source?: 'plaid' | 'manual' | 'import';
 };
 
+async function getOrCreateManualBankAccount(userId: string): Promise<string> {
+  // Check if user has a manual bank account
+  const { data: accounts, error: fetchError } = await supabase
+    .from('bank_accounts')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('account_name', 'Manual Entry')
+    .eq('account_type', 'cash')
+    .limit(1);
+
+  if (fetchError) throw fetchError;
+
+  if (accounts && accounts.length > 0) {
+    return accounts[0].id;
+  }
+
+  // Create manual bank account
+  const { data: newAccount, error: insertError } = await supabase
+    .from('bank_accounts')
+    .insert({
+      user_id: userId,
+      account_name: 'Manual Entry',
+      bank_name: 'Manual',
+      account_type: 'cash',
+      is_active: true,
+    })
+    .select('id')
+    .single();
+
+  if (insertError) throw insertError;
+  return newAccount.id;
+}
+
 export async function upsertProfile(update: UpsertProfileInput) {
   // Make sure we only write profile rows for the signed-in user
   const { data: userResult, error: userError } = await supabase.auth.getUser();
@@ -37,15 +70,25 @@ export async function upsertProfile(update: UpsertProfileInput) {
 }
 
 export async function insertFinancialRecord(record: FinancialRecordInput) {
-  // User-scoped insert that respects RLS on financial_records
+  // User-scoped insert that respects RLS on transactions
   const { data: userResult, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   const user = userResult.user;
   if (!user) throw new Error('User must be signed in to add records');
 
-  const { error } = await supabase.from('financial_records').insert({
-    user_id: user.id,
-    ...record,
+  // Get or create manual bank account
+  const bankAccountId = await getOrCreateManualBankAccount(user.id);
+
+  // Map to transactions table schema
+  const { error } = await supabase.from('transactions').insert({
+    bank_account_id: bankAccountId,
+    amount: record.amount,
+    description: record.memo || record.merchant || '',
+    category_primary: record.category,
+    category_detailed: record.category,
+    date: record.occurred_on,
+    is_manual: true,
+    is_pending: false,
   });
   if (error) throw error;
 }

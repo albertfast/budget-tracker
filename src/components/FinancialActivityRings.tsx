@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -12,6 +12,7 @@ interface FinancialData {
   current: number;
   target: number;
   unit: string;
+  icon: string;
 }
 
 interface CircleProgressProps {
@@ -20,13 +21,14 @@ interface CircleProgressProps {
 }
 
 const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
-  const strokeWidth = 12;
+  const strokeWidth = 14;
   const radius = (data.size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   
   const animatedValue = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.7)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Progress Animation
@@ -35,25 +37,43 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
     Animated.parallel([
       Animated.timing(animatedValue, {
         toValue: progressTarget,
-        duration: 1500,
-        delay: index * 200,
+        duration: 1800,
+        delay: index * 250,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: false, // SVG strokeDashoffset doesn't support native driver
+        useNativeDriver: false,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
-        delay: index * 200,
+        duration: 1000,
+        delay: index * 250,
         useNativeDriver: true,
       }),
-      Animated.timing(scaleAnim, {
+      Animated.spring(scaleAnim, {
         toValue: 1,
-        duration: 800,
-        delay: index * 200,
-        easing: Easing.out(Easing.back(1.5)),
+        delay: index * 250,
+        friction: 4,
+        tension: 40,
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Subtle pulse animation loop
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, [data.value, circumference, index]);
 
   return (
@@ -64,7 +84,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
           width: data.size, 
           height: data.size,
           opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }]
+          transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }]
         }
       ]}
     >
@@ -83,22 +103,21 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
             y2="100%"
           >
             <Stop offset="0%" stopColor={data.color} stopOpacity={1} />
-            <Stop offset="100%" stopColor={data.color} stopOpacity={0.6} />
+            <Stop offset="100%" stopColor={data.color} stopOpacity={0.5} />
           </SvgLinearGradient>
         </Defs>
 
-        {/* Background circle */}
+        {/* Background circle with glow */}
         <Circle
           cx={data.size / 2}
           cy={data.size / 2}
           r={radius}
           fill="none"
-          stroke="#1a2332"
+          stroke="rgba(255, 255, 255, 0.05)"
           strokeWidth={strokeWidth}
-          opacity={0.3}
         />
 
-        {/* Progress circle with animation */}
+        {/* Progress circle with gradient and glow */}
         <AnimatedCircle
           cx={data.size / 2}
           cy={data.size / 2}
@@ -109,18 +128,30 @@ const CircleProgress: React.FC<CircleProgressProps> = ({ data, index }) => {
           strokeDasharray={circumference}
           strokeDashoffset={animatedValue}
           strokeLinecap="round"
+          opacity={0.95}
         />
       </Svg>
 
-      {/* Center percentage */}
+      {/* Center content with icon and percentage */}
       <View style={[styles.centerContent, { width: data.size, height: data.size }]}>
+        <Animated.Text
+          style={[
+            styles.iconText, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }]
+            }
+          ]}
+        >
+          {data.icon}
+        </Animated.Text>
         <Animated.Text
           style={[
             styles.percentageText, 
             { 
               color: data.color,
               opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }]
+              fontSize: data.size * 0.18,
             }
           ]}
         >
@@ -149,29 +180,32 @@ export default function FinancialActivityRings({
     {
       label: "BUDGET",
       value: budgetUsed,
-      color: "#FF6B6B",
-      size: 160,
+      color: "#ef4444",
+      size: 170,
       current: 0, 
       target: 0,
       unit: "%",
+      icon: "💰",
     },
     {
       label: "SAVINGS",
       value: savingsGoal,
-      color: "#4ECDC4",
-      size: 120,
+      color: "#06b6d4",
+      size: 130,
       current: 0,
       target: 0,
       unit: "%",
+      icon: "🏦",
     },
     {
       label: "INVEST",
       value: investmentsGrowth,
-      color: "#FFD93D",
-      size: 80,
+      color: "#f59e0b",
+      size: 90,
       current: 0,
       target: 0,
       unit: "%",
+      icon: "📈",
     },
   ];
 
@@ -241,17 +275,28 @@ export default function FinancialActivityRings({
             styles.detailsContainer,
             {
               opacity: detailsFade,
-              transform: [{ translateX: detailsTranslate }]
+              transform: [{ translateY: detailsTranslate }]
             }
           ]}
         >
           {financialData.map((activity) => (
             <View key={activity.label} style={styles.detailRow}>
               <View style={styles.labelContainer}>
-                <View style={[styles.colorDot, { backgroundColor: activity.color }]} />
+                <Text style={styles.iconEmoji}>{activity.icon}</Text>
                 <Text style={styles.labelText}>{activity.label}</Text>
               </View>
               <View style={styles.valueContainer}>
+                <View style={styles.progressBarContainer}>
+                  <View 
+                    style={[
+                      styles.progressBarFill, 
+                      { 
+                        width: `${Math.min(activity.value, 100)}%`,
+                        backgroundColor: activity.color,
+                      }
+                    ]} 
+                  />
+                </View>
                 <Text style={[styles.valueText, { color: activity.color }]}>
                   {Math.round(activity.value)}%
                 </Text>
@@ -266,42 +311,42 @@ export default function FinancialActivityRings({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 24,
     margin: 16,
     overflow: 'hidden',
   },
   backgroundImage: {
-    opacity: 0.2,
+    opacity: 0.45,
   },
   overlay: {
-    backgroundColor: 'rgba(10, 14, 39, 0.80)',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    borderRadius: 24,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
   },
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    letterSpacing: 0.5,
   },
   ringsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 180,
-    marginBottom: 20,
+    height: 200,
+    marginBottom: 28,
   },
   ringWrapper: {
     position: 'absolute',
   },
   circleContainer: {
-    position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -309,41 +354,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 2,
+  },
+  iconText: {
+    fontSize: 24,
+    marginBottom: 2,
   },
   percentageText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   detailsContainer: {
-    gap: 12,
+    gap: 16,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   labelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  colorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  iconEmoji: {
+    fontSize: 20,
   },
   labelText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#9fb3c8',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#e2e8f0',
+    letterSpacing: 0.5,
   },
   valueContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    gap: 12,
+  },
+  progressBarContainer: {
+    width: 80,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   valueText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    minWidth: 45,
+    textAlign: 'right',
   },
 });

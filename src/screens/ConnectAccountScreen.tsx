@@ -678,9 +678,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'rgba(34, 197, 94, 0.5)',
   },
-  successIcon: {
-    fontSize: 40,
-  },
   modernSuccessTitle: {
     color: '#fff',
     fontSize: 28,

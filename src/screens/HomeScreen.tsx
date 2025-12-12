@@ -17,6 +17,7 @@ interface Transaction {
   category_primary?: string;
   merchant?: string;
   memo?: string;
+  description?: string;
 }
 
 interface MonthlySummary {
@@ -93,12 +94,12 @@ export default function HomeScreen() {
         totalIncome += amount;
       } else if (amount < 0) {
         totalExpenses += Math.abs(amount);
-        
-        // Check if it's an investment
-        const category = (transaction.category_primary || transaction.description || '').toLowerCase();
-        if (category.includes('investment') || category.includes('invest')) {
-          totalInvestments += Math.abs(amount);
-        }
+      }
+      
+      // Check if it's an investment (category_primary or description)
+      const category = (transaction.category_primary || transaction.description || transaction.memo || '').toLowerCase();
+      if (category.includes('investment') || category.includes('invest') || category.includes('nvidia') || category.includes('stock')) {
+        totalInvestments += Math.abs(amount);
       }
     });
 
