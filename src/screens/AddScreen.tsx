@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
@@ -102,6 +102,12 @@ export default function AddScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Add">
+      <ImageBackground
+        source={require('../public/images/nature_collection_12_20250803_183423.png')}
+        style={styles.backgroundImage}
+        imageStyle={styles.imageStyle}
+      >
+        <View style={styles.overlay}>
       <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.sectionHeader}>Quick Entry</Text>
         <Text style={styles.sectionDescription}>Add new transactions and financial entries</Text>
@@ -259,14 +265,22 @@ export default function AddScreen() {
         </Pressable>
       </View>
       </ScrollView>
+        </View>
+      </ImageBackground>
     </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
+  backgroundImage: { flex: 1 },
+  imageStyle: { opacity: 0.9 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(1, 3, 12, 0.35)',
+  },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
-  card: { backgroundColor: '#111a30', borderRadius: 12, padding: 20, marginHorizontal: 8 },
+  card: { backgroundColor: 'rgba(48, 52, 66, 0.55)', borderRadius: 12, padding: 20, marginHorizontal: 8 },
   label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600', marginTop: 4 },
   input: {
     height: 48, borderRadius: 10, borderWidth: 1, borderColor: '#223459',
@@ -281,14 +295,14 @@ const styles = StyleSheet.create({
   save: { backgroundColor: '#3b82f6', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 8 },
   saveText: { color: 'white', fontWeight: '700' },
   sectionHeader: {
-    color: '#9fb3c8',
+    color: '#820d99ff',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionDescription: {
-    color: '#7a8fa5',
+    color: '#0b08ceff',
     fontSize: 14,
     marginBottom: 20,
     textAlign: 'center',

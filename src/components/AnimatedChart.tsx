@@ -77,7 +77,7 @@ export default function AnimatedChart({
                 y2={(chartHeight / 4) * i}
                 stroke="#ffffff"
                 strokeWidth="1"
-                opacity={0.15}
+                opacity={0.35}
               />
             ))}
           </Svg>

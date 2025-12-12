@@ -1,1 +1,8 @@
 node_modules
+.expo
+.venv
+backend/.env
+node-v20
+src/dreal/expo-env.d.ts
+.env
+.nvmrc

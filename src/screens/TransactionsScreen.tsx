@@ -8,6 +8,7 @@ import {
   Platform,
   FlatList,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { AndroidNativeProps, DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -245,6 +246,12 @@ export default function TransactionsScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Transactions" scrollable={false}>
+      <ImageBackground
+        source={require('../public/images/generated-image-172.png')}
+        style={styles.backgroundImage}
+        imageStyle={styles.imageStyle}
+      >
+        <View style={styles.overlay}>
       <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 100 }}>
         <Text style={styles.sectionHeader}>Transactions</Text>
         <Text style={styles.sectionDescription}>Manage your expenses and income</Text>
@@ -334,7 +341,7 @@ export default function TransactionsScreen() {
                   <Text style={{ color: 'white', fontWeight: '700' }}>
                     {item.category} • ${item.amount.toFixed(2)}
                   </Text>
-                  <Text style={{ color: '#9bb4da' }}>
+                  <Text style={{ color: '#9bc6daff' }}>
                     {item.date}{item.desc ? ` • ${item.desc}` : ''}
                   </Text>
                 </View>
@@ -382,16 +389,24 @@ export default function TransactionsScreen() {
         </View>
       </View>
       </ScrollView>
+        </View>
+      </ImageBackground>
     </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#0b1220' },
+  backgroundImage: { flex: 1 },
+  imageStyle: { opacity: 1.2 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.25)',
+  },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
   subTitle: { color: 'white', fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
-  card: { backgroundColor: '#111a30', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
-  label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600' },
+  card: { backgroundColor: 'rgba(41, 44, 61, 0.5)', borderRadius: 12, padding: 20, gap: 16, marginHorizontal: 8 },
+  label: { color: '#d6e0e0ff', fontSize: 13, fontWeight: '600' },
   input: {
     height: 48,
     borderRadius: 10,
@@ -442,8 +457,8 @@ const styles = StyleSheet.create({
   pillText: { color: 'white', fontWeight: '600' },
   button: { backgroundColor: '#3b82f6', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginVertical: 8 },
   buttonText: { color: 'white', fontWeight: '700' },
-  hr: { height: 1, backgroundColor: '#223459', marginVertical: 10, opacity: 0.6 },
-  catName: { color: '#cfe1ff' },
+  hr: { height: 1, backgroundColor: '#1e40af', marginVertical: 10, opacity: 0.6 },
+  catName: { color: '#ffd2cfff' },
   catVal: { color: '#9bb4da' },
   row: {
     flexDirection: 'row',
@@ -463,15 +478,17 @@ const styles = StyleSheet.create({
   },
   smallBtnText: { color: 'white', fontWeight: '700' },
   sectionHeader: {
-    color: '#9fb3c8',
+    color: '#942c1aff',
+    backgroundColor: '#0f1930',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionDescription: {
-    color: '#7a8fa5',
-    fontSize: 14,
+    color: '#245286ff',
+    backgroundColor: '#0f1930',
+    fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
     lineHeight: 18,

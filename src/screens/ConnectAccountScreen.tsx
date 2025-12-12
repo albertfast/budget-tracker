@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Switch,
+  ImageBackground,
 } from 'react-native';
 import PlaidConnection from '../components/PlaidConnection';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
@@ -391,6 +392,12 @@ export default function ConnectAccountScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Connect Account" scrollable={false}>
+      <ImageBackground
+        source={require('../public/images/image-1765508376856.png')}
+        style={styles.backgroundImage}
+        imageStyle={styles.imageStyle}
+      >
+        <View style={styles.overlay}>
       <ScrollView style={styles.screen}>
         <Text style={styles.sectionHeader}>Bank Integration</Text>
         <Text style={styles.sectionDescription}>Connect your bank accounts for automatic transaction sync</Text>
@@ -507,16 +514,24 @@ export default function ConnectAccountScreen() {
           )}
         </View>
       </ScrollView>
+        </View>
+      </ImageBackground>
     </SwipeNavigationWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b1220', paddingHorizontal: 20, paddingVertical: 20 },
+  backgroundImage: { flex: 1 },
+  imageStyle: { opacity: 1.0 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.10)',
+  },
+  screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center', marginTop: 8 },
-  card: { backgroundColor: '#111a30', borderRadius: 12, marginVertical: 16, padding: 20, marginHorizontal: 8 },
-  subtitle: { color: 'white', fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  description: { color: '#9bb4da', fontSize: 14, marginBottom: 20, lineHeight: 20 },
+  card: { backgroundColor: 'rgba(84, 89, 116, 0.40)', borderRadius: 12, marginVertical: 16, padding: 20, marginHorizontal: 8 },
+  subtitle: { color: '#f5f1f5ff', backgroundColor: 'rgba(10, 14, 39, 0.25)', fontSize: 18, fontWeight: '600', marginBottom: 8 },
+  description: { color: '#e4e6e0ff', backgroundColor: 'rgba(10, 14, 39, 0.25)', fontSize: 14, marginBottom: 20, lineHeight: 20 },
   
   // Bank providers
   providersContainer: { marginBottom: 28, paddingHorizontal: 4 },
@@ -550,7 +565,7 @@ const styles = StyleSheet.create({
     borderRadius: 8, 
     marginBottom: 16 
   },
-  label: { color: '#a9c1ea', fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 16 },
+  label: { color: '#030c1dff', fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 16 },
   input: {
     height: 48,
     borderRadius: 10,
@@ -593,7 +608,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 24,
   },
-  connectButtonDisabled: { opacity: 0.6 },
+  connectButtonDisabled: { opacity: 0.2 },
   connectButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
   
   // Success state
@@ -606,7 +621,7 @@ const styles = StyleSheet.create({
   infoLabel: { color: '#a9c1ea', fontSize: 14 },
   infoValue: { color: 'white', fontSize: 14, fontWeight: '600' },
   disconnectButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#ef4477ff',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -615,21 +630,22 @@ const styles = StyleSheet.create({
   
   // Plaid button styles
   sectionHeader: {
-    color: '#9fb3c8',
+    color: '#ebeceeff',
+    backgroundColor: 'rgba(10, 14, 39, 0.25)',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionDescription: {
-    color: '#7a8fa5',
+    color: '#f5ececff',
     fontSize: 14,
     marginBottom: 20,
     textAlign: 'center',
     lineHeight: 18,
   },
   plaidButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#1169f7ff',
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,

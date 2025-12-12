@@ -44,7 +44,7 @@ export default function FinancialSummary({ transactions = [] }: FinancialSummary
   return (
     <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <ImageBackground
-        source={require('../public/images/nature_collection_21_20250803_184232.png')}
+        source={require('../public/images/image-1765508407632.png')}
         style={styles.container}
         imageStyle={styles.backgroundImage}
       >
@@ -170,10 +170,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   backgroundImage: {
-    opacity: 0.2,
+    opacity: 0.55,
   },
   overlay: {
-    backgroundColor: 'rgba(10, 14, 39, 0.80)',
+    backgroundColor: 'rgba(10, 14, 39, 0.45)',
     padding: 20,
   },
   title: {
