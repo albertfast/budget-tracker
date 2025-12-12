@@ -1,7 +1,7 @@
 // Plaid Transaction Service
 import { supabase } from './supabaseClient';
 
-const API_BASE_URL = 'http://10.0.0.214:8001';
+const API_BASE_URL = 'http://10.180.211.211:8001';
 
 export interface PlaidTransaction {
   transaction_id: string;

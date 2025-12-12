@@ -31,10 +31,10 @@ const getApiBaseUrl = () => {
   
   // If env URL contains 'backend:' (Docker internal), replace with LAN IP
   if (envUrl && envUrl.includes('backend:')) {
-    return 'http://10.0.0.214:8001';
+    return 'http://10.180.211.211:8001';
   }
   
-  return envUrl || 'http://10.0.0.214:8001';
+  return envUrl || 'http://10.180.211.211:8001';
 };
 
 const API_BASE_URL = getApiBaseUrl();

@@ -40,9 +40,9 @@ type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 const getApiBaseUrl = () => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && envUrl.includes('backend:')) {
-    return 'http://10.0.0.214:8001';
+    return 'http://10.180.211.211:8001';
   }
-  return envUrl || 'http://10.0.0.214:8001';
+  return envUrl || 'http://10.180.211.211:8001';
 };
 
 export default function ConnectAccountScreen() {
