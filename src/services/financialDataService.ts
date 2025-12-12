@@ -85,7 +85,6 @@ export async function insertFinancialRecord(record: FinancialRecordInput) {
     amount: record.amount,
     description: record.memo || record.merchant || '',
     category_primary: record.category,
-    category_detailed: record.category,
     date: record.occurred_on,
     is_manual: true,
     is_pending: false,
