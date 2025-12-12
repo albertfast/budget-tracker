@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
 import Spacer from '@/components/Spacer';
+import Toast from '@/components/Toast';
 import { insertFinancialRecord } from '@/services/financialDataService';
 import { supabase } from '@/services/supabaseClient';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/constants/categories';
@@ -18,6 +19,17 @@ export default function AddScreen() {
   const [merchant, setMerchant] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [chartData, setChartData] = React.useState<any[]>([]);
+  
+  // Toast state
+  const [toastVisible, setToastVisible] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState('');
+  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
   const selectedCategory = categories.find(c => c.id === category) || categories[0];
@@ -64,7 +76,7 @@ export default function AddScreen() {
   const onSave = async () => {
     const value = parseFloat(amount);
     if (Number.isNaN(value) || value <= 0) {
-      Alert.alert('Invalid amount', 'Please enter a positive number.');
+      showToast('Please enter a positive number', 'error');
       return;
     }
 
@@ -80,14 +92,17 @@ export default function AddScreen() {
         source: 'manual'
       });
 
-      Alert.alert('Success', 'Transaction saved successfully');
+      const categoryName = selectedCategory.label;
+      const emoji = type === 'income' ? '💰' : '💸';
+      showToast(`${emoji} $${value.toFixed(2)} ${categoryName} saved!`, 'success');
+      
       setAmount(''); 
       setDesc(''); 
       setTransactionId('');
       setMerchant('');
       fetchChartData(); // Refresh chart
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to save transaction');
+      showToast(error.message || 'Failed to save transaction', 'error');
     } finally {
       setLoading(false);
     }
@@ -267,6 +282,13 @@ export default function AddScreen() {
       </ScrollView>
         </View>
       </ImageBackground>
+      
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </SwipeNavigationWrapper>
   );
 }

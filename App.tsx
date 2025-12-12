@@ -23,11 +23,26 @@ export default function App() {
           <Tab.Navigator
             screenOptions={({ route }) => ({
               headerShown: false,
-              tabBarStyle: { backgroundColor: '#fff', height: 80 },
-              tabBarActiveTintColor: '#008080',   
-              tabBarInactiveTintColor: '#666',
+              tabBarStyle: { 
+                backgroundColor: '#0f172a',
+                borderTopWidth: 0,
+                height: 70,
+                paddingBottom: 10,
+                paddingTop: 10,
+                elevation: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+              },
+              tabBarActiveTintColor: '#3b82f6',   
+              tabBarInactiveTintColor: '#64748b',
               tabBarIconStyle: { marginTop: 0 },   
-              tabBarLabelStyle: { marginBottom: 0 }, 
+              tabBarLabelStyle: { 
+                marginBottom: 0,
+                fontSize: 12,
+                fontWeight: '600',
+              },
               tabBarIcon: ({ focused, color, size }) => {
                 let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
 
@@ -43,7 +58,7 @@ export default function App() {
                   iconName = focused ? 'person' : 'person-outline';
                 }
 
-                return <Ionicons name={iconName} size={size} color={color} />;
+                return <Ionicons name={iconName} size={focused ? 28 : 24} color={color} />;
               },
             })}
           >

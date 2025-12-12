@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   backgroundImage: {
-    opacity: 0.55,
+    opacity: 0.85,
   },
   overlay: {
     backgroundColor: 'rgba(10, 14, 39, 0.45)',

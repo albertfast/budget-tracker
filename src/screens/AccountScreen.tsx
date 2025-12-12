@@ -136,7 +136,7 @@ export default function AccountScreen() {
         ) : isAuthed ? (
           <View style={{ gap: 10 }}>
             <Text style={styles.label}>You are signed in.</Text>
-            <Pressable onPress={onLogout} style={[styles.button, { marginTop: 4 }]}>
+            <Pressable onPress={onLogout} style={[styles.button, { marginTop: 200 }]}>
               <Text style={styles.buttonText}>Sign out</Text>
             </Pressable>
           </View>
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   imageStyle: { opacity: 0.8 },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 14, 39, 0.25)',
+    backgroundColor: 'rgba(10, 14, 39, 0.15)',
   },
   screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },

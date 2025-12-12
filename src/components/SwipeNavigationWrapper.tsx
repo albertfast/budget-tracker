@@ -314,13 +314,13 @@ export default function SwipeNavigationWrapper({
       }
       
       // Regular mobile single-finger swipe logic
-      const swipeThreshold = 150;
-      const velocityThreshold = 800;
-      const minHorizontalDistance = 80;
+      const swipeThreshold = 200; // Increased from 150 to 200
+      const velocityThreshold = 1200; // Increased from 800 to 1200
+      const minHorizontalDistance = 120; // Increased from 80 to 120
       
-      const verticalScrollThreshold = 100;
+      const verticalScrollThreshold = 80; // Decreased from 100 to 80 - more sensitive to vertical scroll
       const isVerticalScroll = Math.abs(translationY) > verticalScrollThreshold && 
-                              Math.abs(translationY) > Math.abs(translationX) * 1.5;
+                              Math.abs(translationY) > Math.abs(translationX) * 1.2; // More sensitive ratio
       
       if (!isVerticalScroll) {
         const shouldSwipeRight = (translationX > swipeThreshold) || 
@@ -364,8 +364,8 @@ export default function SwipeNavigationWrapper({
               onHandlerStateChange={handleSwipe}
               minPointers={isDesktop || isLargeScreen ? 1 : 1}
               maxPointers={isDesktop || isLargeScreen ? 2 : 1} // Allow 2 fingers on desktop
-              activeOffsetX={[-40, 40]}
-              failOffsetY={isDesktop || isLargeScreen ? [-30, 30] : [-50, 50]} // More sensitive on desktop
+              activeOffsetX={[-60, 60]} // Increased from 40 to 60 - less sensitive
+              failOffsetY={[-40, 40]} // Increased vertical threshold - prioritize vertical scrolling
               shouldCancelWhenOutside={false}
               enabled={true}
             >

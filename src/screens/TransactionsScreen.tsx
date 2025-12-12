@@ -300,9 +300,8 @@ export default function TransactionsScreen() {
         imageStyle={styles.imageStyle}
       >
         <View style={styles.overlay}>
-      
-      {/* Smart Filter Bar */}
-      {showFilter && (
+          {/* Smart Filter Bar */}
+          {showFilter && (
         <View style={styles.filterBar}>
           <View style={styles.filterRow}>
             <TextInput
@@ -342,8 +341,7 @@ export default function TransactionsScreen() {
               style={styles.clearFilterButton}
             >
               <Text style={styles.clearFilterText}>Clear Filters</Text>
-           filteredItems.length > 0 ? (
-            [...filteredIessable>
+            </Pressable>
           )}
         </View>
       )}
@@ -358,8 +356,8 @@ export default function TransactionsScreen() {
         <Text style={styles.sectionHeader}>Transactions</Text>
         <Text style={styles.sectionDescription}>Manage your expenses and income</Text>
       
-      <View style={styles.card}>
-        <View style={{ gap: 10 }}>
+        <View style={styles.card}>
+          <View style={{ gap: 10 }}>
           <Text style={styles.label}>Amount</Text>
           <TextInput
             value={amount}
@@ -436,32 +434,33 @@ export default function TransactionsScreen() {
 
         <Text style={styles.subTitle}>Recent</Text>
         <View style={{ paddingVertical: 8 }}>
-          {[...items].reverse().map((item) => (
-            <View key={item.id} style={{ marginBottom: 12 }}>
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: 'white', fontWeight: '700' }}>
-                    {item.category} • ${item.amount.toFixed(2)}
-                  </Text>
-                  <Text style={{ color: '#9bc6daff' }}>
-                    {item.date}{item.desc ? ` • ${item.desc}` : ''}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <Pressable onPress={() => startEdit(item)} style={[styles.smallBtn, { backgroundColor: '#1e40af' }]}>
-                    <Text style={styles.smallBtnText}>Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => onDelete(item.id)} style={[styles.smallBtn, { backgroundColor: '#ef4444' }]}>
-                    <Text style={styles.smallBtnText}>Del</Text>
-                  </Pressable>
+          {filteredItems.length > 0 ? (
+            [...filteredItems].reverse().map((item) => (
+              <View key={item.id} style={{ marginBottom: 12 }}>
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: 'white', fontWeight: '700' }}>
+                      {item.category} • ${item.amount.toFixed(2)}
+                    </Text>
+                    <Text style={{ color: '#9bc6daff' }}>
+                      {item.date}{item.desc ? ` • ${item.desc}` : ''}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Pressable onPress={() => startEdit(item)} style={[styles.smallBtn, { backgroundColor: '#1e40af' }]}>
+                      <Text style={styles.smallBtnText}>Edit</Text>
+                    </Pressable>
+                    <Pressable onPress={() => onDelete(item.id)} style={[styles.smallBtn, { backgroundColor: '#ef4444' }]}>
+                      <Text style={styles.smallBtnText}>Del</Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
-            
+            ))
           ) : (
             <Text style={{ color: '#7a8fa5', textAlign: 'center', fontStyle: 'italic' }}>
               {items.length === 0 ? 'No transactions yet' : 'No matching transactions'}
-            
-            <Text style={{ color: '#7a8fa5', textAlign: 'center', fontStyle: 'italic' }}>No transactions yet</Text>
+            </Text>
           )}
         </View>
 
@@ -491,17 +490,20 @@ export default function TransactionsScreen() {
             </View>
           </View>
         </View>
-      </View>
+        </View>
       </ScrollView>
         </View>
       </ImageBackground>
     </SwipeNavigationWrapper>
   );
 }
-0.2 },
+
+const styles = StyleSheet.create({
+  backgroundImage: { flex: 1 },
+  imageStyle: { opacity: 1.0 },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 14, 39, 0.85)',
+    backgroundColor: 'rgba(10, 14, 39, 0.25)',
   },
   filterBar: {
     backgroundColor: 'rgba(17, 26, 48, 0.95)',
@@ -543,10 +545,7 @@ export default function TransactionsScreen() {
   clearFilterText: {
     color: '#ef4444',
     fontSize: 12,
-    fontWeight: '600
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10, 14, 39, 0.25)',
+    fontWeight: '600',
   },
   screen: { flex: 1, paddingHorizontal: 20, paddingVertical: 20 },
   title: { color: 'white', fontSize: 24, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
