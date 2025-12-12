@@ -63,9 +63,9 @@ Use these test credentials in Supabase for testing:
 
 | Email in Supabase       | Plaid Username  | Password   | Result |
 |-------------------------|-----------------|------------|--------|
-| user_good@good          | user_good       | pass_good  | ✅ Success |
-| user_ewa_user@good      | user_ewa_user   | abc123     | ✅ Success |
-| user_custom@test        | user_custom     | pass_good  | ✅ Custom data |
+| user_good@good          | user_good       | pass_good  | Success |
+| user_ewa_user@good      | user_ewa_user   | abc123     | Success |
+| user_custom@test        | user_custom     | pass_good  | Custom data |
 
 The app now automatically strips `@good` or any domain when talking to Plaid.
 

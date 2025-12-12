@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { investmentApi, generateMockInvestmentData, InvestmentRecommendation, RiskProfile, SavingsPotential } from '../services/investmentApi';
 
@@ -353,8 +353,14 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Investment Analysis</Text>
+    <ImageBackground
+      source={require('../public/images/nature_collection_40_20250803_213718.png')}
+      style={styles.backgroundContainer}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Investment Analysis</Text>
       
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
@@ -383,11 +389,23 @@ export default function InvestmentAnalysis({ transactions = [] }: InvestmentAnal
         {selectedView === 'recommendations' && renderRecommendations()}
         {selectedView === 'savings' && renderSavingsOptimization()}
       </View>
-    </View>
+        </View>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundContainer: {
+    flex: 1,
+  },
+  backgroundImage: {
+    opacity: 0.2,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.80)',
+  },
   container: {
     backgroundColor: '#111a30',
     borderRadius: 12,

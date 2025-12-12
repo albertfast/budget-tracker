@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ImageBackground } from 'react-native';
 
 interface SpendingCategory {
   category: string;
@@ -159,8 +159,14 @@ export default function CategoryAnalysis({ userId, days = 30 }: CategoryAnalysis
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Spending by Category</Text>
+    <ImageBackground
+      source={require('../public/images/nature_collection_34_20250803_211409.png')}
+      style={styles.backgroundContainer}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Spending by Category</Text>
       
       {/* Period Selection */}
       <View style={styles.periodSelector}>
@@ -232,11 +238,23 @@ export default function CategoryAnalysis({ userId, days = 30 }: CategoryAnalysis
           </View>
         )}
       </ScrollView>
-    </View>
+        </View>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundContainer: {
+    flex: 1,
+  },
+  backgroundImage: {
+    opacity: 0.2,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.80)',
+  },
   container: {
     backgroundColor: '#111a30',
     borderRadius: 12,
