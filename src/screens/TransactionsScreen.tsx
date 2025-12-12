@@ -45,6 +45,14 @@ export default function TransactionsScreen() {
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [items, setItems] = React.useState<Entry[]>([]);
   const [loading, setLoading] = React.useState(false);
+  
+  // Filter state
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [minAmount, setMinAmount] = React.useState('');
+  const [maxAmount, setMaxAmount] = React.useState('');
+  const [showFilter, setShowFilter] = React.useState(true);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const lastScrollY = React.useRef(0);
 
   // Fetch transactions from Supabase
   const fetchTransactions = React.useCallback(async () => {
@@ -244,15 +252,109 @@ export default function TransactionsScreen() {
 
   const maxVal = Math.max(1, ...Object.values(totals));
 
+  // Filter logic
+  const filteredItems = React.useMemo(() => {
+    let filtered = [...items];
+
+    // Text search (description or category)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.desc?.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query)
+      );
+    }
+
+    // Amount range filter
+    const min = parseFloat(minAmount);
+    const max = parseFloat(maxAmount);
+    if (!isNaN(min)) {
+      filtered = filtered.filter(item => item.amount >= min);
+    }
+    if (!isNaN(max)) {
+      filtered = filtered.filter(item => item.amount <= max);
+    }
+
+    return filtered;
+  }, [items, searchQuery, minAmount, maxAmount]);
+
+  // Handle scroll for filter visibility
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollingDown = currentScrollY > lastScrollY.current;
+    
+    if (scrollingDown && currentScrollY > 50) {
+      setShowFilter(false);
+    } else if (!scrollingDown && currentScrollY < lastScrollY.current - 10) {
+      setShowFilter(true);
+    }
+    
+    lastScrollY.current = currentScrollY;
+  };
+
   return (
     <SwipeNavigationWrapper currentTab="Transactions" scrollable={false}>
       <ImageBackground
-        source={require('../public/images/generated-image-172.png')}
+        source={require('../public/images/nature_collection_1_20250803_182435.png')}
         style={styles.backgroundImage}
         imageStyle={styles.imageStyle}
       >
         <View style={styles.overlay}>
-      <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 100 }}>
+      
+      {/* Smart Filter Bar */}
+      {showFilter && (
+        <View style={styles.filterBar}>
+          <View style={styles.filterRow}>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search by name or category..."
+              placeholderTextColor="#7a8fb2"
+              style={styles.filterInput}
+            />
+          </View>
+          <View style={styles.filterRow}>
+            <TextInput
+              value={minAmount}
+              onChangeText={setMinAmount}
+              placeholder="Min $"
+              placeholderTextColor="#7a8fb2"
+              keyboardType="decimal-pad"
+              style={[styles.filterInput, { flex: 1 }]}
+            />
+            <Text style={styles.filterSeparator}>—</Text>
+            <TextInput
+              value={maxAmount}
+              onChangeText={setMaxAmount}
+              placeholder="Max $"
+              placeholderTextColor="#7a8fb2"
+              keyboardType="decimal-pad"
+              style={[styles.filterInput, { flex: 1 }]}
+            />
+          </View>
+          {(searchQuery || minAmount || maxAmount) && (
+            <Pressable 
+              onPress={() => {
+                setSearchQuery('');
+                setMinAmount('');
+                setMaxAmount('');
+              }}
+              style={styles.clearFilterButton}
+            >
+              <Text style={styles.clearFilterText}>Clear Filters</Text>
+           filteredItems.length > 0 ? (
+            [...filteredIessable>
+          )}
+        </View>
+      )}
+
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.screen} 
+        contentContainerStyle={{ paddingBottom: 100 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         <Text style={styles.sectionHeader}>Transactions</Text>
         <Text style={styles.sectionDescription}>Manage your expenses and income</Text>
       
@@ -354,9 +456,11 @@ export default function TransactionsScreen() {
                   </Pressable>
                 </View>
               </View>
-            </View>
-          ))}
-          {items.length === 0 && (
+            
+          ) : (
+            <Text style={{ color: '#7a8fa5', textAlign: 'center', fontStyle: 'italic' }}>
+              {items.length === 0 ? 'No transactions yet' : 'No matching transactions'}
+            
             <Text style={{ color: '#7a8fa5', textAlign: 'center', fontStyle: 'italic' }}>No transactions yet</Text>
           )}
         </View>
@@ -394,10 +498,52 @@ export default function TransactionsScreen() {
     </SwipeNavigationWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  backgroundImage: { flex: 1 },
-  imageStyle: { opacity: 1.2 },
+0.2 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 14, 39, 0.85)',
+  },
+  filterBar: {
+    backgroundColor: 'rgba(17, 26, 48, 0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  filterInput: {
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#223459',
+    color: 'white',
+    paddingHorizontal: 12,
+    backgroundColor: '#0f1930',
+    fontSize: 14,
+  },
+  filterSeparator: {
+    color: '#9fb3c8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  clearFilterButton: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+  },
+  clearFilterText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '600
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(10, 14, 39, 0.25)',

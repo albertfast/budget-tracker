@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Switch,
   ImageBackground,
+  Animated,
+  Easing,
 } from 'react-native';
 import PlaidConnection from '../components/PlaidConnection';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
@@ -53,6 +55,60 @@ export default function ConnectAccountScreen() {
   const [syncFrequency, setSyncFrequency] = React.useState('daily');
   const [showPlaidConnection, setShowPlaidConnection] = React.useState(false);
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([]);
+
+  // Success animation values
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(50)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  const coinAnim1 = React.useRef(new Animated.Value(0)).current;
+  const coinAnim2 = React.useRef(new Animated.Value(0)).current;
+  const coinAnim3 = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (connectionStatus === 'connected') {
+      // Stagger animations
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 5,
+          delay: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Floating coins animation
+      [coinAnim1, coinAnim2, coinAnim3].forEach((anim, index) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(anim, {
+              toValue: 1,
+              duration: 2000 + index * 300,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim, {
+              toValue: 0,
+              duration: 2000 + index * 300,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      });
+    }
+  }, [connectionStatus]);
 
   // Mock bank providers - in real app, this would come from API
   const bankProviders: BankProvider[] = [
@@ -349,43 +405,93 @@ export default function ConnectAccountScreen() {
   );
 
   if (connectionStatus === 'connected') {
+    const coin1Y = coinAnim1.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -30],
+    });
+    const coin2Y = coinAnim2.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -40],
+    });
+    const coin3Y = coinAnim3.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -35],
+    });
+
     return (
       <SwipeNavigationWrapper currentTab="Connect Account" scrollable={false}>
-        <ScrollView style={styles.screen}>
-          <Text style={styles.title}>Connect Account</Text>
-          
-          <View style={styles.successCard}>
-            <Text style={styles.successIcon}>✅</Text>
-            <Text style={styles.successTitle}>Bank Connected!</Text>
-            <Text style={styles.successMessage}>
-              Your {bankProviders.find(p => p.id === selectedProvider)?.name} account is now connected.
-              Transactions will sync automatically.
-            </Text>
-            
-            <View style={styles.connectionInfo}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Status:</Text>
-                <Text style={styles.infoValue}>Active</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Auto Sync:</Text>
-                <Text style={styles.infoValue}>{enableAutoSync ? 'Enabled' : 'Disabled'}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Sync Frequency:</Text>
-                <Text style={styles.infoValue}>{syncFrequency}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Last Sync:</Text>
-                <Text style={styles.infoValue}>Just now</Text>
-              </View>
-            </View>
-            
-            <Pressable style={styles.disconnectButton} onPress={handleDisconnect}>
-              <Text style={styles.disconnectButtonText}>Disconnect Bank</Text>
-            </Pressable>
+        <ImageBackground
+          source={require('../public/images/nature_collection_8_20250803_193249.png')}
+          style={styles.backgroundImage}
+          imageStyle={styles.imageStyle}
+        >
+          <View style={styles.overlay}>
+            <ScrollView style={styles.screen}>
+              <Text style={styles.sectionHeader}>Connect Account</Text>
+              
+              <Animated.View 
+                style={[
+                  styles.modernSuccessCard,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  }
+                ]}
+              >
+                {/* Animated floating coins */}
+                <Animated.Text style={[styles.floatingCoin, styles.coin1, { transform: [{ translateY: coin1Y }] }]}>
+                  💰
+                </Animated.Text>
+                <Animated.Text style={[styles.floatingCoin, styles.coin2, { transform: [{ translateY: coin2Y }] }]}>
+                  💵
+                </Animated.Text>
+                <Animated.Text style={[styles.floatingCoin, styles.coin3, { transform: [{ translateY: coin3Y }] }]}>
+                  🌟
+                </Animated.Text>
+
+                {/* Success icon with scale animation */}
+                <Animated.View style={[styles.successIconContainer, { transform: [{ scale: scaleAnim }] }]}>
+                  <View style={styles.successIconCircle}>
+                    <Text style={styles.successIcon}>✅</Text>
+                  </View>
+                </Animated.View>
+
+                <Text style={styles.modernSuccessTitle}>Bank Connected!</Text>
+                <Text style={styles.modernSuccessMessage}>
+                  Your account is now connected. Transactions will sync automatically.
+                </Text>
+
+                {/* Modern info cards */}
+                <View style={styles.modernInfoGrid}>
+                  <View style={styles.modernInfoCard}>
+                    <Text style={styles.modernInfoIcon}>🟢</Text>
+                    <Text style={styles.modernInfoLabel}>Status</Text>
+                    <Text style={styles.modernInfoValue}>Active</Text>
+                  </View>
+                  <View style={styles.modernInfoCard}>
+                    <Text style={styles.modernInfoIcon}>⚡</Text>
+                    <Text style={styles.modernInfoLabel}>Auto Sync</Text>
+                    <Text style={styles.modernInfoValue}>Enabled</Text>
+                  </View>
+                  <View style={styles.modernInfoCard}>
+                    <Text style={styles.modernInfoIcon}>📅</Text>
+                    <Text style={styles.modernInfoLabel}>Frequency</Text>
+                    <Text style={styles.modernInfoValue}>{syncFrequency}</Text>
+                  </View>
+                  <View style={styles.modernInfoCard}>
+                    <Text style={styles.modernInfoIcon}>🕐</Text>
+                    <Text style={styles.modernInfoLabel}>Last Sync</Text>
+                    <Text style={styles.modernInfoValue}>Just now</Text>
+                  </View>
+                </View>
+
+                <Pressable style={styles.modernDisconnectButton} onPress={handleDisconnect}>
+                  <Text style={styles.modernDisconnectButtonText}>Disconnect Bank</Text>
+                </Pressable>
+              </Animated.View>
+            </ScrollView>
           </View>
-        </ScrollView>
+        </ImageBackground>
       </SwipeNavigationWrapper>
     );
   }
@@ -532,6 +638,110 @@ const styles = StyleSheet.create({
   card: { backgroundColor: 'rgba(84, 89, 116, 0.40)', borderRadius: 12, marginVertical: 16, padding: 20, marginHorizontal: 8 },
   subtitle: { color: '#f5f1f5ff', backgroundColor: 'rgba(10, 14, 39, 0.25)', fontSize: 18, fontWeight: '600', marginBottom: 8 },
   description: { color: '#e4e6e0ff', backgroundColor: 'rgba(10, 14, 39, 0.25)', fontSize: 14, marginBottom: 20, lineHeight: 20 },
+  
+  // Modern Success Card with animations
+  modernSuccessCard: {
+    backgroundColor: 'rgba(17, 26, 48, 0.95)',
+    borderRadius: 24,
+    padding: 32,
+    marginHorizontal: 16,
+    marginVertical: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  floatingCoin: {
+    position: 'absolute',
+    fontSize: 28,
+    opacity: 0.6,
+  },
+  coin1: { left: 30, top: 40 },
+  coin2: { right: 40, top: 60 },
+  coin3: { left: '50%', top: 50 },
+  successIconContainer: {
+    marginBottom: 20,
+  },
+  successIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(34, 197, 94, 0.5)',
+  },
+  successIcon: {
+    fontSize: 40,
+  },
+  modernSuccessTitle: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modernSuccessMessage: {
+    color: '#9fb3c8',
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 28,
+    paddingHorizontal: 20,
+  },
+  modernInfoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    width: '100%',
+    marginBottom: 28,
+  },
+  modernInfoCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: 'rgba(30, 64, 175, 0.15)',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  modernInfoIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  modernInfoLabel: {
+    color: '#9fb3c8',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  modernInfoValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modernDisconnectButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  modernDisconnectButtonText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   
   // Bank providers
   providersContainer: { marginBottom: 28, paddingHorizontal: 4 },

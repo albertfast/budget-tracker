@@ -6,11 +6,11 @@ import {
   TextInput,
   Pressable,
   Image,
-  Alert,
   ActivityIndicator,
   ImageBackground,
 } from 'react-native';
 import SwipeNavigationWrapper from '@/components/SwipeNavigationWrapper';
+import Toast from '@/components/Toast';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOut as supaSignOut } from '@/services/supabaseAuth';
 import { useAuth } from '@/context/AuthContext';
 
@@ -21,30 +21,47 @@ export default function AccountScreen() {
   const [username, setUsername] = React.useState('');
   const [mode, setMode] = React.useState<'login' | 'signup'>('login');
   const [submitting, setSubmitting] = React.useState(false);
+  
+  // Toast state
+  const [toastVisible, setToastVisible] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState('');
+  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const onLogin = async () => {
-    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    if (!email.trim() || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
     try {
       setSubmitting(true);
       await signInWithEmail(email.trim(), password);
       await refreshSession();
-      Alert.alert('Success', 'Signed in');
+      showToast('Signed in successfully! 🎉');
     } catch (err: any) {
-      Alert.alert('Login failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Login failed. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
   const onCreate = async () => {
-    if (!email.trim() || !password) return Alert.alert('Missing info', 'Please enter email and password.');
+    if (!email.trim() || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
     try {
       setSubmitting(true);
       await signUpWithEmail(email.trim(), password, username.trim() || undefined);
       await refreshSession();
-      Alert.alert('Success', 'Account created, check email if confirmation is required.');
+      showToast('Account created! Check your email for confirmation.');
     } catch (err: any) {
-      Alert.alert('Signup failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Signup failed. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -55,22 +72,24 @@ export default function AccountScreen() {
       setSubmitting(true);
       await signInWithGoogle();
       await refreshSession();
-      Alert.alert('Success', 'Signed in with Google');
+      showToast('Signed in with Google! 🎉');
     } catch (err: any) {
-      Alert.alert('Google Sign-In failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Google Sign-In failed', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const onForgot = () => Alert.alert('Forgot password', 'Password reset flow TBD in Supabase auth settings');
+  const onForgot = () => showToast('Password reset flow coming soon!', 'info');
+  
   const onLogout = async () => {
     try {
       setSubmitting(true);
       await supaSignOut();
       await refreshSession();
+      showToast('Signed out successfully');
     } catch (err: any) {
-      Alert.alert('Sign out failed', err?.message ?? 'Please try again');
+      showToast(err?.message ?? 'Sign out failed', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -82,8 +101,14 @@ export default function AccountScreen() {
 
   return (
     <SwipeNavigationWrapper currentTab="Account">
+      <Toast 
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
       <ImageBackground
-        source={require('../public/images/image-1765508402418.png')}
+        source={require('../public/images/nature_collection_31_20250803_185135.png')}
         style={styles.backgroundImage}
         imageStyle={styles.imageStyle}
       >

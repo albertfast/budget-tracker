@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
 import { create, open, LinkSuccess, LinkExit, LinkEvent } from 'react-native-plaid-link-sdk';
 import { makeAuthenticatedRequest, authService } from '../services/authService';
@@ -42,6 +44,65 @@ export default function PlaidConnection({ onSuccess, onError }: PlaidConnectionP
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Animation values
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const pulseValue = useRef(new Animated.Value(1)).current;
+  const floatValue1 = useRef(new Animated.Value(0)).current;
+  const floatValue2 = useRef(new Animated.Value(0)).current;
+  const floatValue3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (loading) {
+      // Spinning animation
+      Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+
+      // Pulse animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseValue, {
+            toValue: 1.2,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseValue, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Floating animations for particles
+      [floatValue1, floatValue2, floatValue3].forEach((anim, index) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(anim, {
+              toValue: 1,
+              duration: 2000 + index * 500,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(anim, {
+              toValue: 0,
+              duration: 2000 + index * 500,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      });
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (user?.email) {
@@ -213,11 +274,54 @@ export default function PlaidConnection({ onSuccess, onError }: PlaidConnectionP
   };
 
   if (loading) {
+    const spin = spinValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    });
+
+    const float1 = floatValue1.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-20, -60],
+    });
+
+    const float2 = floatValue2.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-10, -70],
+    });
+
+    const float3 = floatValue3.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-15, -80],
+    });
+
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#008080" />
-        <Text style={styles.text}>Connecting to Plaid Sandbox...</Text>
-        <Text style={styles.subtext}>Authenticating with your credentials</Text>
+      <View style={styles.loadingContainer}>
+        {/* Floating particles */}
+        <Animated.Text style={[styles.particle, styles.particle1, { transform: [{ translateY: float1 }] }]}>
+          💰
+        </Animated.Text>
+        <Animated.Text style={[styles.particle, styles.particle2, { transform: [{ translateY: float2 }] }]}>
+          🌿
+        </Animated.Text>
+        <Animated.Text style={[styles.particle, styles.particle3, { transform: [{ translateY: float3 }] }]}>
+          ⚙️
+        </Animated.Text>
+        
+        {/* Main spinner */}
+        <Animated.View style={[styles.spinnerContainer, { transform: [{ scale: pulseValue }] }]}>
+          <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}>
+            <Text style={styles.spinnerText}>🔐</Text>
+          </Animated.View>
+        </Animated.View>
+        
+        <Text style={styles.loadingText}>Connecting to Plaid Sandbox...</Text>
+        <Text style={styles.loadingSubtext}>Authenticating with your credentials</Text>
+        
+        <View style={styles.dotsContainer}>
+          <Animated.View style={[styles.dot, { opacity: pulseValue }]} />
+          <Animated.View style={[styles.dot, { opacity: pulseValue }]} />
+          <Animated.View style={[styles.dot, { opacity: pulseValue }]} />
+        </View>
       </View>
     );
   }
@@ -245,6 +349,66 @@ export default function PlaidConnection({ onSuccess, onError }: PlaidConnectionP
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 300,
+    position: 'relative',
+  },
+  spinnerContainer: {
+    marginBottom: 20,
+  },
+  spinner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinnerText: {
+    fontSize: 40,
+  },
+  particle: {
+    position: 'absolute',
+    fontSize: 24,
+    opacity: 0.6,
+  },
+  particle1: {
+    left: '20%',
+    top: 60,
+  },
+  particle2: {
+    right: '20%',
+    top: 80,
+  },
+  particle3: {
+    left: '50%',
+    top: 70,
+  },
+  loadingText: {
+    marginTop: 20,
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  loadingSubtext: {
+    marginTop: 8,
+    color: '#9fb3c8',
+    fontSize: 14,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 16,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#008080',
+  },
   container: {
     padding: 20,
     alignItems: 'center',
@@ -261,17 +425,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   errorText: {
-    color: 'red',
+    color: '#ef4444',
     marginBottom: 10,
     textAlign: 'center',
+    fontSize: 16,
   },
   retryButton: {
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#1e40af',
+    borderRadius: 10,
   },
   retryText: {
-    color: '#333',
+    color: '#fff',
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#008080',
