@@ -1,5 +1,21 @@
 {
-  "plugins": [
-    "expo-secure-store"
-  ]
+  "expo": {
+    "name": "SmartBudget",
+    "slug": "smartbudget",
+    "scheme": "smartbudget",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "plugins": [
+      "expo-asset",
+      "react-native-plaid-link-sdk"
+    ]
+  }
 }

@@ -1,0 +1,333 @@
+// Plaid Service Integration for SmartBudget Mobile
+import { 
+  PlaidLinkToken, 
+  PlaidPublicToken, 
+  PlaidAccessToken, 
+  PlaidAccount, 
+  PlaidTransaction,
+  ApiResponse 
+} from '../types';
+import ConfigService from './config';
+
+class PlaidService {
+  private static instance: PlaidService;
+  private config = ConfigService;
+
+  private constructor() {}
+
+  static getInstance(): PlaidService {
+    if (!PlaidService.instance) {
+      PlaidService.instance = new PlaidService();
+    }
+    return PlaidService.instance;
+  }
+
+  // Create Plaid Link Token
+  async createLinkToken(userId: string): Promise<ApiResponse<PlaidLinkToken>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/create-link-token`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders(),
+        body: JSON.stringify({
+          user: { client_user_id: userId },
+          products: ['transactions'],
+          country_codes: ['US'],
+          language: 'en',
+          webhook: `${this.config.api.baseUrl}/api/plaid/webhook`
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to create link token'
+        };
+      }
+
+      return {
+        success: true,
+        data: data.link_token
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Exchange public token for access token
+  async exchangePublicToken(publicToken: string): Promise<ApiResponse<PlaidAccessToken>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/exchange-token`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders(),
+        body: JSON.stringify({
+          public_token: publicToken
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to exchange public token'
+        };
+      }
+
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Get accounts from Plaid
+  async getAccounts(accessToken: string): Promise<ApiResponse<PlaidAccount[]>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/accounts`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders(),
+        body: JSON.stringify({
+          access_token: accessToken
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to fetch accounts'
+        };
+      }
+
+      return {
+        success: true,
+        data: data.accounts
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Get transactions from Plaid
+  async getTransactions(
+    accessToken: string, 
+    startDate: string, 
+    endDate: string
+  ): Promise<ApiResponse<PlaidTransaction[]>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/transactions`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders(),
+        body: JSON.stringify({
+          access_token: accessToken,
+          start_date: startDate,
+          end_date: endDate
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to fetch transactions'
+        };
+      }
+
+      return {
+        success: true,
+        data: data.transactions
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Sync transactions for an account
+  async syncTransactions(bankAccountId: string): Promise<ApiResponse<{ synced: number; new: number }>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/sync/${bankAccountId}`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to sync transactions'
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          synced: data.synced_count || 0,
+          new: data.new_count || 0
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Remove Plaid item
+  async removeItem(accessToken: string): Promise<ApiResponse<boolean>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/remove-item`, {
+        method: 'POST',
+        headers: this.config.getApiHeaders(),
+        body: JSON.stringify({
+          access_token: accessToken
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return {
+          success: false,
+          error: data.error || 'Failed to remove item'
+        };
+      }
+
+      return {
+        success: true,
+        data: true
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Get webhook status
+  async getWebhookStatus(itemId: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetch(`${this.config.api.baseUrl}/api/plaid/webhook-status/${itemId}`, {
+        method: 'GET',
+        headers: this.config.getApiHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to get webhook status'
+        };
+      }
+
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  // Format Plaid account data for our database
+  formatPlaidAccount(plaidAccount: PlaidAccount, userId: string): Partial<any> {
+    return {
+      user_id: userId,
+      account_name: plaidAccount.name,
+      bank_name: 'Plaid Bank', // This would be determined from the institution
+      account_type: this.mapAccountType(plaidAccount.type, plaidAccount.subtype),
+      is_active: true,
+      plaid_account_id: plaidAccount.id,
+      plaid_mask: plaidAccount.mask
+    };
+  }
+
+  // Format Plaid transaction data for our database
+  formatPlaidTransaction(
+    plaidTransaction: PlaidTransaction, 
+    bankAccountId: string
+  ): Partial<any> {
+    return {
+      bank_account_id: bankAccountId,
+      amount: plaidTransaction.amount,
+      description: plaidTransaction.name || plaidTransaction.merchant_name,
+      category_primary: plaidTransaction.category?.[0],
+      category_detailed: plaidTransaction.category?.join(', '),
+      date: plaidTransaction.date,
+      is_manual: false,
+      is_pending: plaidTransaction.pending,
+      plaid_transaction_id: plaidTransaction.transaction_id,
+      location: plaidTransaction.location ? {
+        address: plaidTransaction.location.address,
+        city: plaidTransaction.location.city,
+        state: plaidTransaction.location.region,
+        zip: plaidTransaction.location.postal_code
+      } : null
+    };
+  }
+
+  // Map Plaid account types to our types
+  private mapAccountType(type: string, subtype?: string): string {
+    switch (type.toLowerCase()) {
+      case 'depository':
+        if (subtype?.includes('checking')) return 'checking';
+        if (subtype?.includes('savings')) return 'savings';
+        return 'checking';
+      case 'credit':
+        return 'credit';
+      case 'loan':
+        return 'credit';
+      case 'investment':
+        return 'savings';
+      default:
+        return 'cash';
+    }
+  }
+
+  // Validate Plaid configuration
+  validatePlaidConfig(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!this.config.plaid.clientId) {
+      errors.push('Plaid client ID is missing');
+    }
+
+    if (!this.config.plaid.secret) {
+      errors.push('Plaid secret is missing');
+    }
+
+    if (!['sandbox', 'development', 'production'].includes(this.config.plaid.env.toLowerCase())) {
+      errors.push('Invalid Plaid environment');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+}
+
+export default PlaidService.getInstance();
